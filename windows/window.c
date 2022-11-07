@@ -223,6 +223,7 @@ static UINT wm_mousewheel = WM_MOUSEWHEEL;
 ScriptData scriptdata; 
 
 #include "script_win.c" 
+#include "script_ahk.c" 
 #include "..\script.c" 
 
 #endif  /* rutty */   
@@ -2148,6 +2149,31 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 	    return 0;
 	}
 	break;
+#ifdef rutty
+    case WM_COPYDATA:
+	{
+       COPYDATASTRUCT *cds;
+       cds = (COPYDATASTRUCT *) lParam;
+       if (cds->dwData == ruttyAHK_send)
+       {
+         script_ahk_send(&scriptdata, cds);
+         return 1;
+       }  
+       else if (cds->dwData == ruttyAHK_enable)
+       {
+         script_ahk_enable(cds);
+         return 1;
+       }  
+       else if (cds->dwData == ruttyAHK_set)
+       {
+         script_ahk_set(cds);
+         return 1;
+       }  
+       else  
+         return 0;  /* not our message */
+    } 
+    break; 
+#endif  /* rutty */     
       case WM_COMMAND:
       case WM_SYSCOMMAND:
 	switch (wParam & ~0xF) {       /* low 4 bits reserved to Windows */

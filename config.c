@@ -1423,17 +1423,20 @@ void setup_config_box(struct controlbox *b, int midsession,
 /* rutty: Session/Scripting panel */
 #ifdef rutty
 	ctrl_settitle(b, "Session/Scripting", "Scripting");
-	s = ctrl_getset(b, "Session/Scripting", "Start", NULL);
-	 ctrl_filesel(s, "Script filename:", 'f',
-		 NULL, TRUE, "Select filename for script replay", HELPCTX(no_help),
-		 conf_filesel_handler, I(CONF_script_filename));
-	 ctrl_radiobuttons(s, NULL, 'm', 4, HELPCTX(no_help),
-          conf_radiobutton_handler, I(CONF_script_mode),
-          "Off", I(SCRIPT_STOP),
-          "Replay", I(SCRIPT_PLAY),
-          "Record", I(SCRIPT_RECORD),
-          NULL);
-
+  if (!midsession)
+  {
+    s = ctrl_getset(b, "Session/Scripting", "Start", NULL);
+     ctrl_filesel(s, "Script filename:", 'f',
+       NULL, TRUE, "Select filename for script replay", HELPCTX(no_help),
+       conf_filesel_handler, I(CONF_script_filename));
+     ctrl_radiobuttons(s, NULL, 'm', 4, HELPCTX(no_help),
+            conf_radiobutton_handler, I(CONF_script_mode),
+            "Off", I(SCRIPT_STOP),
+            "Replay", I(SCRIPT_PLAY),
+            "Record", I(SCRIPT_RECORD),
+            NULL);
+  }
+  
    	s = ctrl_getset(b, "Session/Scripting", "Scripting", NULL);
     
     ctrl_editbox(s, "line delay (ms)", 'd', 40, HELPCTX(no_help),
