@@ -17,7 +17,7 @@ PuTTY is a free (MIT-licensed) Win32 Telnet and SSH client. This manual document
 <em>Note to Unix users:</em> this manual currently primarily documents the Windows versions of the PuTTY utilities. Some options are therefore mentioned that are absent from the <a name="i0"></a>Unix version; the Unix version has features not described here; and the <a name="i1"></a><code>pterm</code> and command-line <code>puttygen</code> utilities are not described at all. The only Unix-specific documentation that currently exists is the <a name="i2"></a>man pages.
 </p>
 <p>
-This manual is copyright 2001-2011 Simon Tatham. All rights reserved. You may distribute this documentation under the MIT licence. See <a href="AppendixC.html#licence">appendix C</a> for the licence text in full.
+This manual is copyright 2001-2013 Simon Tatham. All rights reserved. You may distribute this documentation under the MIT licence. See <a href="AppendixC.html#licence">appendix C</a> for the licence text in full.
 </p>
 
 <ul>
@@ -112,22 +112,21 @@ This manual is copyright 2001-2011 Simon Tatham. All rights reserved. You may di
 <ul>
 <li><a href="Chapter10.html#errors-hostkey-absent">10.1 &#8216;The server's host key is not cached in the registry&#8217;</a></li>
 <li><a href="Chapter10.html#errors-hostkey-wrong">10.2 &#8216;WARNING - POTENTIAL SECURITY BREACH!&#8217;</a></li>
-<li><a href="Chapter10.html#errors-portfwd-space">10.3 &#8216;Out of space for port forwardings&#8217;</a></li>
-<li><a href="Chapter10.html#errors-cipher-warning">10.4 &#8216;The first cipher supported by the server is ... below the configured warning threshold&#8217;</a></li>
-<li><a href="Chapter10.html#errors-toomanyauth">10.5 &#8216;Server sent disconnect message type 2 (protocol error): "Too many authentication failures for root"&#8217;</a></li>
-<li><a href="Chapter10.html#errors-memory">10.6 &#8216;Out of memory&#8217;</a></li>
-<li><a href="Chapter10.html#errors-internal">10.7 &#8216;Internal error&#8217;, &#8216;Internal fault&#8217;, &#8216;Assertion failed&#8217;</a></li>
-<li><a href="Chapter10.html#errors-cant-load-key">10.8 &#8216;Unable to use this private key file&#8217;, &#8216;Couldn't load private key&#8217;, &#8216;Key is of wrong type&#8217;</a></li>
-<li><a href="Chapter10.html#errors-refused">10.9 &#8216;Server refused our public key&#8217; or &#8216;Key refused&#8217;</a></li>
-<li><a href="Chapter10.html#errors-access-denied">10.10 &#8216;Access denied&#8217;, &#8216;Authentication refused&#8217;</a></li>
-<li><a href="Chapter10.html#errors-no-auth">10.11 &#8216;No supported authentication methods available&#8217;</a></li>
-<li><a href="Chapter10.html#errors-crc">10.12 &#8216;Incorrect CRC received on packet&#8217; or &#8216;Incorrect MAC received on packet&#8217;</a></li>
-<li><a href="Chapter10.html#errors-garbled">10.13 &#8216;Incoming packet was garbled on decryption&#8217;</a></li>
-<li><a href="Chapter10.html#errors-x11-proxy">10.14 &#8216;PuTTY X11 proxy: <em>various errors</em>&#8217;</a></li>
-<li><a href="Chapter10.html#errors-connaborted">10.15 &#8216;Network error: Software caused connection abort&#8217;</a></li>
-<li><a href="Chapter10.html#errors-connreset">10.16 &#8216;Network error: Connection reset by peer&#8217;</a></li>
-<li><a href="Chapter10.html#errors-connrefused">10.17 &#8216;Network error: Connection refused&#8217;</a></li>
-<li><a href="Chapter10.html#errors-conntimedout">10.18 &#8216;Network error: Connection timed out&#8217;</a></li>
+<li><a href="Chapter10.html#errors-cipher-warning">10.3 &#8216;The first cipher supported by the server is ... below the configured warning threshold&#8217;</a></li>
+<li><a href="Chapter10.html#errors-toomanyauth">10.4 &#8216;Server sent disconnect message type 2 (protocol error): "Too many authentication failures for root"&#8217;</a></li>
+<li><a href="Chapter10.html#errors-memory">10.5 &#8216;Out of memory&#8217;</a></li>
+<li><a href="Chapter10.html#errors-internal">10.6 &#8216;Internal error&#8217;, &#8216;Internal fault&#8217;, &#8216;Assertion failed&#8217;</a></li>
+<li><a href="Chapter10.html#errors-cant-load-key">10.7 &#8216;Unable to use this private key file&#8217;, &#8216;Couldn't load private key&#8217;, &#8216;Key is of wrong type&#8217;</a></li>
+<li><a href="Chapter10.html#errors-refused">10.8 &#8216;Server refused our public key&#8217; or &#8216;Key refused&#8217;</a></li>
+<li><a href="Chapter10.html#errors-access-denied">10.9 &#8216;Access denied&#8217;, &#8216;Authentication refused&#8217;</a></li>
+<li><a href="Chapter10.html#errors-no-auth">10.10 &#8216;No supported authentication methods available&#8217;</a></li>
+<li><a href="Chapter10.html#errors-crc">10.11 &#8216;Incorrect CRC received on packet&#8217; or &#8216;Incorrect MAC received on packet&#8217;</a></li>
+<li><a href="Chapter10.html#errors-garbled">10.12 &#8216;Incoming packet was garbled on decryption&#8217;</a></li>
+<li><a href="Chapter10.html#errors-x11-proxy">10.13 &#8216;PuTTY X11 proxy: <em>various errors</em>&#8217;</a></li>
+<li><a href="Chapter10.html#errors-connaborted">10.14 &#8216;Network error: Software caused connection abort&#8217;</a></li>
+<li><a href="Chapter10.html#errors-connreset">10.15 &#8216;Network error: Connection reset by peer&#8217;</a></li>
+<li><a href="Chapter10.html#errors-connrefused">10.16 &#8216;Network error: Connection refused&#8217;</a></li>
+<li><a href="Chapter10.html#errors-conntimedout">10.17 &#8216;Network error: Connection timed out&#8217;</a></li>
 </ul></li>
 <li><a href="AppendixA.html#faq">Appendix A: PuTTY FAQ</a>
 <ul>
@@ -187,6 +186,5 @@ This manual is copyright 2001-2011 Simon Tatham. All rights reserved. You may di
 <li><a href="IndexPage.html#Index">Index</a></li>
 </ul>
 
-<hr><p>If you want to provide feedback on this manual or on the PuTTY tools themselves, see the <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/feedback.html">Feedback page</a>.</p><address>
-[PuTTY release 0.62]</address></body>
+<hr><p>If you want to provide feedback on this manual or on the PuTTY tools themselves, see the <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/feedback.html">Feedback page</a>.</p><address></address></body>
 </html>

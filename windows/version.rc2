@@ -39,7 +39,7 @@
 
 /* We keep this around even for snapshots, for monotonicity of version
  * numbering. It needs to be kept up to date. NB _comma_-separated. */
-#define BASE_VERSION 0,62
+#define BASE_VERSION 0,63
 
 #if defined SNAPSHOT
 
@@ -90,7 +90,7 @@
 VS_VERSION_INFO VERSIONINFO
 /* (None of this "fixed" info appears to be trivially user-visible on
  * Win98SE. The binary version does show up on Win2K.) */
-FILEVERSION	BINARY_VERSION 
+FILEVERSION	BINARY_VERSION
 PRODUCTVERSION	BINARY_VERSION	/* version of whole suite */
 FILEFLAGSMASK	VS_FF_DEBUG | VS_FF_PRERELEASE | VS_FF_PRIVATEBUILD
 FILEFLAGS	0x0L
@@ -122,21 +122,21 @@ BEGIN
 	    VALUE "FileVersion",	STR(rutty)
 	    VALUE "ProductVersion",	"PuTTY " STR(RELEASE) " - " APPNAME " " STR(rutty) 
 	    VALUE "LegalCopyright",	"Copyright \251 2013 Ernst Dijk"
-        VALUE "Copyright",	"RuTTY, a modified version of PuTTY.  PuTTY is Copyright 1997-2011 Simon Tatham.  Modifications are Copyright 2013 Ernst Dijk."
-#else
-      VALUE "CompanyName",	"Simon Tatham"  /* required :/ */
+      VALUE "Copyright",	"RuTTY, a modified version of PuTTY.  PuTTY is Copyright 1997-2013 Simon Tatham.  Modifications are Copyright 2013 Ernst Dijk."
+#else  
+	    VALUE "CompanyName",	"Simon Tatham"  /* required :/ */
 	    VALUE "ProductName",	"PuTTY suite"
 	    VALUE "FileDescription",	APPDESC
 	    VALUE "InternalName",	APPNAME
 	    VALUE "OriginalFilename",	APPNAME
 	    VALUE "FileVersion",	VERSION_TEXT
 	    VALUE "ProductVersion",	VERSION_TEXT
-	    VALUE "LegalCopyright",	"Copyright \251 1997-2011 Simon Tatham."
+	    VALUE "LegalCopyright",	"Copyright \251 1997-2013 Simon Tatham."
 #if (!defined SNAPSHOT) && (!defined RELEASE)
 	    /* Only if VS_FF_PRIVATEBUILD. */
 	    VALUE "PrivateBuild",	VERSION_TEXT /* NBI */
 #endif
-#endif
+#endif  /* rutty */
 	END
     END
     BLOCK "VarFileInfo"

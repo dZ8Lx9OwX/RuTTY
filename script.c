@@ -1,38 +1,45 @@
-/* script.c  version 0.13.26c
+/* script.c  version 0.14.08
 
-  part of rutty - a modified version of putty
-  Copyright 2013, Ernst Dijk
+ part of rutty - a modified version of putty
+ Copyright 2013, Ernst Dijk
 */
-
 
 /* proto's 
-
-   todo:
-   more from script.h should be here
 */
 void script_setsend(ScriptData * scriptdata);
+void script_record_stop(ScriptData * scriptdata);
+BOOL script_record_line(ScriptData * scriptdata, int remote);
+int script_cond_chk(char *ref, int rc, char *data, int dc);
+void script_cond_set(char * cond, int *p, char *in, int sz);
+int script_chkline(ScriptData * scriptdata);
+void script_timeout(void *ctx, long now);
+void script_sendline(void *ctx, long now);
+void script_sendchar(void *ctx, long now);
+void script_getline(ScriptData * scriptdata);
 
 
 /* init scriptdata structure
    copy/translate settings from scripting panel
-
-   todo:
-   line_delay and char_delay are in milliseconds - must be converted to ticks
 */
-void script_init(ScriptData * scriptdata, Config * cfg)
+void script_init(ScriptData * scriptdata, Conf * conf)
 {
-    scriptdata->line_delay = (cfg->script_line_delay<5)?5:cfg->script_line_delay;  /* min.delay 5 ms */
-    scriptdata->char_delay = (cfg->script_char_delay);
-    scriptdata->cond_char = (cfg->script_cond_line[0]=='\0')?':':cfg->script_cond_line[0];  /* if none use default */
-    scriptdata->enable = cfg->script_enable;
-    scriptdata->cond_use = cfg->script_enable?cfg->script_cond_use:FALSE;  /* can only be true if wait is enabled */
-    scriptdata->except = cfg->script_except;
-    scriptdata->timeout = cfg->script_timeout * TICKSPERSEC ;  /* in winstuff.h */
+    scriptdata->line_delay = conf_get_int(conf, CONF_script_line_delay);  
+    if(scriptdata->line_delay<5) 
+      scriptdata->line_delay = 5; 
+    scriptdata->line_delay = scriptdata->line_delay * TICKSPERSEC / 1000;
+    scriptdata->char_delay = conf_get_int(conf, CONF_script_char_delay) * TICKSPERSEC / 1000;
+    scriptdata->cond_char =  conf_get_str(conf, CONF_script_cond_line)[0];
+    if(scriptdata->cond_char =='\0') 
+      scriptdata->cond_char =':';  /* if none use default */
+    scriptdata->enable = conf_get_int(conf, CONF_script_enable);
+    scriptdata->cond_use = (scriptdata->enable)?conf_get_int(conf, CONF_script_cond_use):FALSE;  /* can only be true if wait is enabled */
+    scriptdata->except = conf_get_int(conf, CONF_script_except);
+    scriptdata->timeout = conf_get_int(conf, CONF_script_timeout) * TICKSPERSEC ;  /* in winstuff.h */
 
-    script_cond_set(scriptdata->waitfor, &scriptdata->waitfor_c, cfg->script_waitfor,strlen(cfg->script_waitfor));
-    script_cond_set(scriptdata->halton, &scriptdata->halton_c, cfg->script_halton,strlen(cfg->script_halton));
+    script_cond_set(scriptdata->waitfor, &scriptdata->waitfor_c, conf_get_str(conf, CONF_script_waitfor), strlen(conf_get_str(conf, CONF_script_waitfor)));
+    script_cond_set(scriptdata->halton, &scriptdata->halton_c, conf_get_str(conf, CONF_script_halton), strlen(conf_get_str(conf, CONF_script_halton)));
 
-    scriptdata->crlf = cfg->script_crlf;
+    scriptdata->crlf = conf_get_int(conf, CONF_script_crlf);
 
     scriptdata->waitfor2[0] = '\0';
     scriptdata->waitfor2_c = -1;  /* -1= there is no condition from file, 0= there an empty line (cr/lf) */
@@ -48,21 +55,22 @@ void script_init(ScriptData * scriptdata, Config * cfg)
 
     scriptdata->localdata_c = 0 ;
     scriptdata->localdata[0] = '\0' ;
+
 }
 
 
 /* send script file to host
-   0.13: script file often short - read complete file im memory
-   makes read a head to detect lf lf possible
+   assume script file short - read complete file in memory
+   makes read ahead to detect lf lf possible
 */
-BOOL script_sendfile(ScriptData * scriptdata, Filename * script_filename)
+BOOL script_sendfile(ScriptData * scriptdata, Filename * scriptfile)
  {
     FILE * fp;
     long fsize;
     if(scriptdata->runs)
       return FALSE;  /* a script is already running */
 
-    fp = f_open(*script_filename, "rb", FALSE);
+    fp = f_open(scriptfile, "rb", FALSE);
     if(fp==NULL)
     {
       logevent(NULL, "script file not found");
@@ -394,8 +402,8 @@ void script_cond_set(char * cond, int *p, char *in, int sz)
     }
     else if(in[0]!='"')
     {
-      if(sz>script_cond_size)
-        i = sz - script_cond_size;  /* line to large - use only last part */
+      if(sz>(script_cond_size-1))
+        i = sz - (script_cond_size-1);  /* line to large - use only last part */
       cond[(*p)++]='\0';
       while(i<sz)
         cond[(*p)++] = in[i++];
@@ -451,7 +459,7 @@ int script_cond_chk(char *ref, int rc, char *data, int dc)
 */
 void script_setsend(ScriptData * scriptdata)
 {
-    expire_timer_context(scriptdata);  /* stop timeout */
+    //expire_timer_context(scriptdata);  /* stop timeout */
     scriptdata->latest = 0;
 
     if(scriptdata->nextline_c == 0)  /* no more data */
@@ -486,7 +494,7 @@ void script_remote(ScriptData * scriptdata, const char * data, int len)
     {
       /* no need to record cr/lf - we add a lf when writing it to file */
       /* we must prevent recording empty lines - incase cr is followed by lf */
-      if(scriptdata->remotedata_c>script_cond_size)
+      if(scriptdata->remotedata_c > script_cond_size)
         script_record_line(scriptdata, TRUE);
 
       /* reset buffer */
@@ -546,9 +554,7 @@ void script_local(ScriptData * scriptdata, const char * data, int len)
     {
       if(scriptdata->localdata_c>=script_line_size)
       {
-        /* buffer full, data is recorded as a seperate line
-           replay with 'wait for host response' enabled will probetly not be possible without edditing the file
-        */
+        /* buffer full */
         script_record_line(scriptdata, FALSE);
         scriptdata->localdata_c = 0;
         scriptdata->localdata[scriptdata->localdata_c] = '\0' ;
@@ -579,8 +585,8 @@ BOOL script_record(ScriptData * scriptdata, Filename * script_filename)
 {
     if(scriptdata->scriptrecord != NULL)
       return FALSE;
-
-    if ((scriptdata->scriptrecord = f_open(*script_filename, "r", FALSE))!=NULL)
+  
+    if ((scriptdata->scriptrecord = f_open(script_filename, "r", FALSE))!=NULL)
     {
       fclose(scriptdata->scriptrecord);
       logevent(NULL, "script recording, file already exists");
@@ -588,7 +594,8 @@ BOOL script_record(ScriptData * scriptdata, Filename * script_filename)
       return FALSE;
     }
 
-    scriptdata->scriptrecord = f_open(*script_filename, "wb", FALSE);
+    scriptdata->cond_charR = scriptdata->cond_char;  /* copy of current cond_char for record */
+    scriptdata->scriptrecord = f_open(script_filename, "wb", FALSE);
     if(scriptdata->scriptrecord==NULL)
     {
       logevent(NULL, "unable to open file for script recording");
@@ -596,7 +603,6 @@ BOOL script_record(ScriptData * scriptdata, Filename * script_filename)
         return FALSE;
     }
 
-    /* todo: add 'stop recording' in the menu  */
     logevent(NULL, "script recording started");
     return TRUE;
 }
@@ -609,10 +615,8 @@ void script_record_stop(ScriptData * scriptdata)
       fclose(scriptdata->scriptrecord);
       scriptdata->scriptrecord = NULL;
       logevent(NULL, "script recording stopped");
-      /* todo: remove 'stop recording' from the menu */
     }
 };
-
 
 BOOL script_record_line(ScriptData * scriptdata, int remote)
 {
@@ -623,7 +627,7 @@ BOOL script_record_line(ScriptData * scriptdata, int remote)
 
     if(remote)
     {
-      fputc(scriptdata->cond_char, scriptdata->scriptrecord);
+      fputc(scriptdata->cond_charR, scriptdata->scriptrecord);
       fail = (fwrite(&(scriptdata->remotedata[script_cond_size]), 1, (scriptdata->remotedata_c - script_cond_size), scriptdata->scriptrecord)!=(scriptdata->remotedata_c - script_cond_size));
     }
     else
@@ -638,9 +642,9 @@ BOOL script_record_line(ScriptData * scriptdata, int remote)
       return FALSE;
     }
 
-     fputc('\n', scriptdata->scriptrecord);
-     fflush(scriptdata->scriptrecord);
-     return TRUE;
+    fputc('\n', scriptdata->scriptrecord);
+    fflush(scriptdata->scriptrecord);
+    return TRUE;
 }
 
 

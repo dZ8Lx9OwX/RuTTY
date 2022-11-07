@@ -94,6 +94,7 @@
 <li><a href="#faq-connaborted">A.7.22 Do you want to hear about &#8216;Software caused connection abort&#8217;?</a></li>
 <li><a href="#faq-rekey">A.7.23 My SSH-2 session locks up for a few seconds every so often.</a></li>
 <li><a href="#faq-xpwontrun">A.7.24 PuTTY fails to start up. Windows claims that &#8216;the application configuration is incorrect&#8217;.</a></li>
+<li><a href="#faq-system32">A.7.25 When I put PuTTY in <code>C:\WINDOWS\SYSTEM32</code> on my 64-bit Windows system, &#8216;Duplicate Session&#8217; doesn't work.</a></li>
 </ul></li>
 <li><a href="#faq-secure">A.8 Security questions</a>
 <ul>
@@ -483,7 +484,7 @@ pscp user@host:"remote file" .
 <h2><a name="faq-trouble"></a><a name="SA.7"></a>A.7 Troubleshooting</h2>
 <h3><a name="faq-incorrect-mac"></a><a name="QA.7.1"></a>A.7.1 Why do I see &#8216;Incorrect MAC received on packet&#8217;?</h3>
 <p>
-One possible cause of this that used to be common is a bug in old SSH-2 servers distributed by <code>ssh.com</code>. (This is not the only possible cause; see <a href="Chapter10.html#errors-crc">section 10.12</a> in the documentation.) Version 2.3.0 and below of their SSH-2 server constructs Message Authentication Codes in the wrong way, and expects the client to construct them in the same wrong way. PuTTY constructs the MACs correctly by default, and hence these old servers will fail to work with it.
+One possible cause of this that used to be common is a bug in old SSH-2 servers distributed by <code>ssh.com</code>. (This is not the only possible cause; see <a href="Chapter10.html#errors-crc">section 10.11</a> in the documentation.) Version 2.3.0 and below of their SSH-2 server constructs Message Authentication Codes in the wrong way, and expects the client to construct them in the same wrong way. PuTTY constructs the MACs correctly by default, and hence these old servers will fail to work with it.
 </p>
 <p>
 If you are using PuTTY version 0.52 or better, this should work automatically: PuTTY should detect the buggy servers from their version number announcement, and automatically start to construct its MACs in the same incorrect manner as they do, so it will be able to work with them.
@@ -726,7 +727,7 @@ There is a patch for OpenSSH attached to that bug; it's also fixed in recent ver
 </p>
 <h3><a name="faq-connaborted"></a><a name="QA.7.22"></a>A.7.22 Do you want to hear about &#8216;Software caused connection abort&#8217;?</h3>
 <p>
-In the documentation for PuTTY 0.53 and 0.53b, we mentioned that we'd like to hear about any occurrences of this error. Since the release of PuTTY 0.54, however, we've been convinced that this error doesn't indicate that PuTTY's doing anything wrong, and we don't need to hear about further occurrences. See <a href="Chapter10.html#errors-connaborted">section 10.15</a> for our current documentation of this error.
+In the documentation for PuTTY 0.53 and 0.53b, we mentioned that we'd like to hear about any occurrences of this error. Since the release of PuTTY 0.54, however, we've been convinced that this error doesn't indicate that PuTTY's doing anything wrong, and we don't need to hear about further occurrences. See <a href="Chapter10.html#errors-connaborted">section 10.14</a> for our current documentation of this error.
 </p>
 <h3><a name="faq-rekey"></a><a name="QA.7.23"></a>A.7.23 My SSH-2 session <a name="i55"></a>locks up for a few seconds every so often.</h3>
 <p>
@@ -739,6 +740,13 @@ These <a name="i57"></a>delays are inconvenient, but they are there for your pro
 <p>
 This is caused by a bug in certain versions of <a name="i58"></a>Windows XP which is triggered by PuTTY 0.58. This was fixed in 0.59. The <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/xp-wont-run">&#8216;xp-wont-run&#8217;</a> entry in PuTTY's wishlist has more details.
 </p>
+<h3><a name="faq-system32"></a><a name="QA.7.25"></a>A.7.25 When I put PuTTY in <code>C:\WINDOWS\<a name="i59"></a>SYSTEM32</code> on my <a name="i60"></a>64-bit Windows system, <a name="i61"></a>&#8216;Duplicate Session&#8217; doesn't work.</h3>
+<p>
+The short answer is not to put the PuTTY executables in that location.
+</p>
+<p>
+On 64-bit systems, <code>C:\WINDOWS\SYSTEM32</code> is intended to contain only 64-bit binaries; Windows' 32-bit binaries live in <code>C:\WINDOWS\SYSWOW64</code>. When a 32-bit program such as PuTTY runs on a 64-bit system, it cannot by default see the &#8216;real&#8217; <code>C:\WINDOWS\SYSTEM32</code> at all, because the <a href="http://msdn.microsoft.com/en-us/library/aa384187(v=vs.85).aspx">File System Redirector</a> arranges that the running program sees the appropriate kind of binaries in <code>SYSTEM32</code>. Thus, operations in the PuTTY suite that involve it accessing its own executables, such as <a name="i62"></a>&#8216;New Session&#8217; and &#8216;Duplicate Session&#8217;, will not work.
+</p>
 <h2><a name="faq-secure"></a><a name="SA.8"></a>A.8 Security questions</h2>
 <h3><a name="faq-publicpc"></a><a name="QA.8.1"></a>A.8.1 Is it safe for me to download PuTTY and use it on a public PC?</h3>
 <p>
@@ -747,14 +755,14 @@ It depends on whether you trust that PC. If you don't trust the public PC, don't
 <p>
 If you do trust the PC, then it's probably OK to use PuTTY on it (but if you don't trust the network, then the PuTTY download might be tampered with, so it would be better to carry PuTTY with you on a floppy).
 </p>
-<h3><a name="faq-cleanup"></a><a name="QA.8.2"></a>A.8.2 What does PuTTY leave on a system? How can I <a name="i59"></a>clean up after it?</h3>
+<h3><a name="faq-cleanup"></a><a name="QA.8.2"></a>A.8.2 What does PuTTY leave on a system? How can I <a name="i63"></a>clean up after it?</h3>
 <p>
-PuTTY will leave some Registry entries, and a random seed file, on the PC (see <a href="#faq-settings">question A.5.2</a>). If you are using PuTTY on a public PC, or somebody else's PC, you might want to clean these up when you leave. You can do that automatically, by running the command <code>putty -cleanup</code>. (Note that this only removes settings for the currently logged-in user on <a name="i60"></a>multi-user systems.)
+PuTTY will leave some Registry entries, and a random seed file, on the PC (see <a href="#faq-settings">question A.5.2</a>). If you are using PuTTY on a public PC, or somebody else's PC, you might want to clean these up when you leave. You can do that automatically, by running the command <code>putty -cleanup</code>. (Note that this only removes settings for the currently logged-in user on <a name="i64"></a>multi-user systems.)
 </p>
 <p>
 If PuTTY was installed from the installer package, it will also appear in &#8216;Add/Remove Programs&#8217;. Older versions of the uninstaller do not remove the above-mentioned registry entries and file.
 </p>
-<h3><a name="faq-dsa"></a><a name="QA.8.3"></a>A.8.3 How come PuTTY now supports <a name="i61"></a>DSA, when the website used to say how insecure it was?</h3>
+<h3><a name="faq-dsa"></a><a name="QA.8.3"></a>A.8.3 How come PuTTY now supports <a name="i65"></a>DSA, when the website used to say how insecure it was?</h3>
 <p>
 DSA has a major weakness <em>if badly implemented</em>: it relies on a random number generator to far too great an extent. If the random number generator produces a number an attacker can predict, the DSA private key is exposed - meaning that the attacker can log in as you on all systems that accept that key.
 </p>
@@ -904,7 +912,7 @@ Some people have asked us for an Export Control Classification Number (ECCN) for
 Similarly, some people have asked us for FIPS certification of the PuTTY tools. Unless someone else is prepared to do the necessary work and pay any costs, we can't provide this.
 </p>
 <h2><a name="faq-misc"></a><a name="SA.10"></a>A.10 Miscellaneous questions</h2>
-<h3><a name="faq-openssh"></a><a name="QA.10.1"></a>A.10.1 Is PuTTY a port of <a name="i62"></a>OpenSSH, or based on OpenSSH or OpenSSL?</h3>
+<h3><a name="faq-openssh"></a><a name="QA.10.1"></a>A.10.1 Is PuTTY a port of <a name="i66"></a>OpenSSH, or based on OpenSSH or OpenSSL?</h3>
 <p>
 No, it isn't. PuTTY is almost completely composed of code written from scratch for PuTTY. The only code we share with OpenSSH is the detector for SSH-1 CRC compensation attacks, written by CORE SDI S.A; we share no code at all with OpenSSL.
 </p>
@@ -924,6 +932,5 @@ It's the name of a popular SSH and Telnet client. Any other meaning is in the ey
 Exactly like the English word &#8216;putty&#8217;, which we pronounce /&#712;p&#652;ti/.
 </p>
 
-<hr><p>If you want to provide feedback on this manual or on the PuTTY tools themselves, see the <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/feedback.html">Feedback page</a>.</p><address>
-[PuTTY release 0.62]</address></body>
+<hr><p>If you want to provide feedback on this manual or on the PuTTY tools themselves, see the <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/feedback.html">Feedback page</a>.</p><address></address></body>
 </html>

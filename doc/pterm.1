@@ -30,11 +30,11 @@ Specify the name under which \fBpterm\fP looks up X resources. Normally it will 
 .IP "\fB\-fn\fP \fIfont-name\fP"
 Specify the font to use for normal text displayed in the terminal.
 .IP "\fB\-fb\fP \fIfont-name\fP"
-Specify the font to use for bold text displayed in the terminal. If the \fBBoldAsColour\fP resource is set to 1 (the default), bold text will be displayed in different colours instead of a different font, so this option will be ignored. If \fBBoldAsColour\fP is set to 0 and you do not specify a bold font, \fBpterm\fP will overprint the normal font to make it look bolder.
+Specify the font to use for bold text displayed in the terminal. If the \fBBoldAsColour\fP resource is set to 1 (the default), bold text will be displayed in different colours instead of a different font, so this option will be ignored. If \fBBoldAsColour\fP is set to 0 or 2 and you do not specify a bold font, \fBpterm\fP will overprint the normal font to make it look bolder.
 .IP "\fB\-fw\fP \fIfont-name\fP"
 Specify the font to use for double-width characters (typically Chinese, Japanese and Korean text) displayed in the terminal.
 .IP "\fB\-fwb\fP \fIfont-name\fP"
-Specify the font to use for bold double-width characters (typically Chinese, Japanese and Korean text). Like \fB-fb\fP, this will be ignored unless the \fBBoldAsColour\fP resource is set to 0.
+Specify the font to use for bold double-width characters (typically Chinese, Japanese and Korean text). Like \fB-fb\fP, this will be ignored unless the \fBBoldAsColour\fP resource is set to 0 or 2.
 .IP "\fB\-geometry\fP \fIgeometry\fP"
 Specify the size of the terminal, in rows and columns of text. See \fIX(7)\fP for more information on the syntax of geometry specifications.
 .IP "\fB\-sl\fP \fIlines\fP"
@@ -44,9 +44,9 @@ Specify the foreground colour to use for normal text.
 .IP "\fB\-bg\fP \fIcolour\fP"
 Specify the background colour to use for normal text.
 .IP "\fB\-bfg\fP \fIcolour\fP"
-Specify the foreground colour to use for bold text, if the \fBBoldAsColour\fP resource is set to 1 (the default).
+Specify the foreground colour to use for bold text, if the \fBBoldAsColour\fP resource is set to 1 (the default) or 2.
 .IP "\fB\-bbg\fP \fIcolour\fP"
-Specify the foreground colour to use for bold reverse-video text, if the \fBBoldAsColour\fP resource is set to 1 (the default). (This colour is best thought of as the bold version of the background colour; so it only appears when text is displayed \fIin\fP the background colour.)
+Specify the foreground colour to use for bold reverse-video text, if the \fBBoldAsColour\fP resource is set to 1 (the default) or 2. (This colour is best thought of as the bold version of the background colour; so it only appears when text is displayed \fIin\fP the background colour.)
 .IP "\fB\-cfg\fP \fIcolour\fP"
 Specify the foreground colour to use for text covered by the cursor.
 .IP "\fB\-cbg\fP \fIcolour\fP"
@@ -179,15 +179,15 @@ This resource is the same as the width part of the \fB\-geometry\fP command-line
 .IP "\fBpterm.Font\fP"
 This resource is the same as the \fB\-fn\fP command-line option: it controls the font used to display normal text. The default is `\fBfixed\fP'.
 .IP "\fBpterm.BoldFont\fP"
-This resource is the same as the \fB\-fb\fP command-line option: it controls the font used to display bold text when \fBBoldAsColour\fP is turned off. The default is unset (the font will be bolded by printing it twice at a one-pixel offset).
+This resource is the same as the \fB\-fb\fP command-line option: it controls the font used to display bold text when \fBBoldAsColour\fP is set to 0 or 2. The default is unset (the font will be bolded by printing it twice at a one-pixel offset).
 .IP "\fBpterm.WideFont\fP"
 This resource is the same as the \fB\-fw\fP command-line option: it controls the font used to display double-width characters. The default is unset (double-width characters cannot be displayed).
 .IP "\fBpterm.WideBoldFont\fP"
-This resource is the same as the \fB\-fwb\fP command-line option: it controls the font used to display double-width characters in bold, when \fBBoldAsColour\fP is turned off. The default is unset (double-width characters are displayed in bold by printing them twice at a one-pixel offset).
+This resource is the same as the \fB\-fwb\fP command-line option: it controls the font used to display double-width characters in bold, when \fBBoldAsColour\fP is set to 0 or 2. The default is unset (double-width characters are displayed in bold by printing them twice at a one-pixel offset).
 .IP "\fBpterm.ShadowBoldOffset\fP"
 This resource can be set to an integer; the default is \(hy1. It specifies the offset at which text is overprinted when using `shadow bold' mode. The default (1) means that the text will be printed in the normal place, and also one character to the right; this seems to work well for most X bitmap fonts, which have a blank line of pixels down the right-hand side. For some fonts, you may need to set this to \(hy1, so that the text is overprinted one pixel to the left; for really large fonts, you may want to set it higher than 1 (in one direction or the other).
 .IP "\fBpterm.BoldAsColour\fP"
-This option should be set to either 0 or 1; the default is 1. It specifies the default state of auto wrap mode. When set to 1, bold text is shown by displaying it in a brighter colour; when set to 0, bold text is shown by displaying it in a heavier font.
+This option should be set to either 0, 1, or 2; the default is 1. It specifies how bold text should be displayed. When set to 1, bold text is shown by displaying it in a brighter colour; when set to 0, bold text is shown by displaying it in a heavier font; when set to 2, both effects happen at once (a heavy font \fIand\fP a brighter colour).
 .IP "\fBpterm.Colour0\fP, \fBpterm.Colour1\fP, ..., \fBpterm.Colour21\fP"
 These options control the various colours used to display text in the \fBpterm\fP window. Each one should be specified as a triple of decimal numbers giving red, green and blue values: so that black is `\fB0,0,0\fP', white is `\fB255,255,255\fP', red is `\fB255,0,0\fP' and so on.
 .RS

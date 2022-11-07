@@ -12,7 +12,7 @@ described here; and the pterm and command-line puttygen utilities are not
 described at all. The only Unix-specific documentation that currently
 exists is the man pages.
 
-This manual is copyright 2001-2011 Simon Tatham. All rights reserved. You
+This manual is copyright 2001-2013 Simon Tatham. All rights reserved. You
 may distribute this documentation under the MIT licence. See appendix C for
 the licence text in full.
 
@@ -572,8 +572,8 @@ Chapter 3: Using PuTTY
 
        Now you should be able to log in to the SSH server as normal. To
        check that X forwarding has been successfully negotiated during
-       connection startup, you can check the PuTTY Event Log (see section 3
-       .1.3.1). It should say something like this:
+       connection startup, you can check the PuTTY Event Log (see section
+       3.1.3.1). It should say something like this:
 
          2001-12-05 17:22:01 Requesting X11 forwarding
          2001-12-05 17:22:02 X11 forwarding enabled
@@ -1417,8 +1417,8 @@ Chapter 4: Configuring PuTTY
 
        Auto wrap mode can be turned on and off by control sequences sent by
        the server. This configuration option controls the _default_ state,
-       which will be restored when you reset the terminal (see section 3
-       .1.3.6). However, if you modify this option in mid-session using
+       which will be restored when you reset the terminal (see section
+       3.1.3.6). However, if you modify this option in mid-session using
        `Change Settings', it will take effect immediately.
 
  4.3.2 `DEC Origin Mode initially on'
@@ -1515,8 +1515,8 @@ Chapter 4: Configuring PuTTY
 
        Blinking text can be turned on and off by control sequences sent by
        the server. This configuration option controls the _default_ state,
-       which will be restored when you reset the terminal (see section 3
-       .1.3.6). However, if you modify this option in mid-session using
+       which will be restored when you reset the terminal (see section
+       3.1.3.6). However, if you modify this option in mid-session using
        `Change Settings', it will take effect immediately.
 
  4.3.7 `Answerback to ^E'
@@ -2257,12 +2257,16 @@ Chapter 4: Configuring PuTTY
        so it must usually be manually configured.
 
        There are a lot of character sets to choose from. The `Remote
-       character set' option lets you select one. By default PuTTY will
-       attempt to choose a character set that is right for your locale as
-       reported by Windows; if it gets it wrong, you can select a different
-       one using this control.
+       character set' option lets you select one.
 
-       A few notable character sets are:
+       By default PuTTY will use the UTF-8 encoding of Unicode, which can
+       represent pretty much any character; data coming from the server
+       is interpreted as UTF-8, and keystrokes are sent UTF-8 encoded.
+       This is what most modern distributions of Linux will expect by
+       default. However, if this is wrong for your server, you can select a
+       different character set using this control.
+
+       A few other notable character sets are:
 
         -  The ISO-8859 series are all standard character sets that include
            various accented characters appropriate for different sets of
@@ -2275,12 +2279,6 @@ Chapter 4: Configuring PuTTY
 
         -  If you want the old IBM PC character set with block graphics and
            line-drawing characters, you can select `CP437'.
-
-        -  PuTTY also supports Unicode mode, in which the data coming from
-           the server is interpreted as being in the UTF-8 encoding of
-           Unicode, and keystrokes are sent UTF-8 encoded. If you select
-           `UTF-8' as a character set you can use this mode. Not all
-           server-side applications will support it.
 
        If you need support for a numeric code page which is not listed in
        the drop-down list, such as code page 866, then you can try entering
@@ -2517,18 +2515,20 @@ Chapter 4: Configuring PuTTY
        your terminal setting. On modern Linux machines, you could try
        `xterm-256color'.
 
-4.12.3 `Bolded text is a different colour'
+4.12.3 `Indicate bolded text by changing'
 
        When the server sends a control sequence indicating that some text
-       should be displayed in bold, PuTTY can handle this two ways. It can
-       either change the font for a bold version, or use the same font in a
-       brighter colour. This control lets you choose which.
+       should be displayed in bold, PuTTY can handle this in several ways.
+       It can either change the font for a bold version, or use the same
+       font in a brighter colour, or it can do both (brighten the colour
+       _and_ embolden the font). This control lets you choose which.
 
-       By default the box is checked, so non-bold text is displayed in
-       light grey and bold text is displayed in bright white (and similarly
-       in other colours). If you uncheck the box, bold and non-bold text
-       will be displayed in the same colour, and instead the font will
-       change to indicate the difference.
+       By default bold is indicated by colour, so non-bold text is
+       displayed in light grey and bold text is displayed in bright white
+       (and similarly in other colours). If you change the setting to `The
+       font' box, bold and non-bold text will be displayed in the same
+       colour, and instead the font will change to indicate the difference.
+       If you select `Both', the font and the colour will both change.
 
 4.12.4 `Attempt to use logical palettes'
 
@@ -3289,8 +3289,8 @@ Chapter 4: Configuring PuTTY
 
        While this renegotiation is taking place, no data can pass through
        the SSH connection, so it may appear to `freeze'. (The occurrence
-       of repeat key exchange is noted in the Event Log; see section 3
-       .1.3.1.) Usually the same algorithm is used as at the start of the
+       of repeat key exchange is noted in the Event Log; see section 3.1.3
+       .1.) Usually the same algorithm is used as at the start of the
        connection, with a similar overhead.
 
        These options control how often PuTTY will initiate a repeat key
@@ -4016,6 +4016,27 @@ Chapter 4: Configuring PuTTY
        server, the session will work correctly, but download performance
        will be less than it could be.
 
+4.25.11 `Chokes on PuTTY's SSH-2 `winadj' requests'
+
+       PuTTY sometimes sends a special request to SSH servers in the middle
+       of channel data, with the name winadj@putty.projects.tartarus.org
+       (see section F.1). The purpose of this request is to measure the
+       round-trip time to the server, which PuTTY uses to tune its flow
+       control. The server does not actually have to _understand_ the
+       message; it is expected to send back a SSH_MSG_CHANNEL_FAILURE
+       message indicating that it didn't understand it. (All PuTTY needs
+       for its timing calculations is _some_ kind of response.)
+
+       It has been known for some SSH servers to get confused by this
+       message in one way or another - because it has a long name, or
+       because they can't cope with unrecognised request names even to the
+       extent of sending back the correct failure response, or because they
+       handle it sensibly but fill up the server's log file with pointless
+       spam, or whatever. PuTTY therefore supports this bug-compatibility
+       flag: if it believes the server has this bug, it will never send
+       its `winadj@putty.projects.tartarus.org' request, and will make do
+       without its timing data.
+
   4.26 The Serial panel
 
        The Serial panel allows you to configure options that only apply
@@ -4178,7 +4199,7 @@ Chapter 5: Using PSCP to transfer files securely
 
          Z:\owendadmin>pscp
          PuTTY Secure Copy client
-         Release 0.62
+         Release 0.63
          Usage: pscp [options] [user@]host:source target
                 pscp [options] source [source...] [user@]host:target
                 pscp [options] -ls [user@]host:filespec
@@ -5067,7 +5088,7 @@ Chapter 7: Using the command-line connection tool Plink
 
          Z:\sysosd>plink
          PuTTY Link: command-line connection utility
-         Release 0.62
+         Release 0.63
          Usage: plink [options] [user@]host [command]
                 ("host" can also be a PuTTY saved session name)
          Options:
@@ -5454,18 +5475,6 @@ Chapter 8: Using public keys for SSH authentication
        the key PuTTYgen will generate.
 
        Currently 1024 bits should be sufficient for most purposes.
-
-       Note that an RSA key is generated by finding two primes of half the
-       length requested, and then multiplying them together. For example,
-       if you ask PuTTYgen for a 1024-bit RSA key, it will create two 512-
-       bit primes and multiply them. The result of this multiplication
-       might be 1024 bits long, or it might be only 1023; so you may not
-       get the exact length of key you asked for. This is perfectly normal,
-       and you do not need to worry. The lengths should only ever differ by
-       one, and there is no perceptible drop in security as a result.
-
-       DSA keys are not created by multiplying primes together, so they
-       should always be exactly the length you asked for.
 
  8.2.4 The `Generate' button
 
@@ -6038,21 +6047,7 @@ Chapter 10: Common error messages
 
        See section 2.2 for more information on host keys.
 
-  10.3 `Out of space for port forwardings'
-
-       PuTTY has a fixed-size buffer which it uses to store the details
-       of all port forwardings you have set up in an SSH session. If you
-       specify too many port forwardings on the PuTTY or Plink command line
-       and this buffer becomes full, you will see this error message.
-
-       We need to fix this (fixed-size buffers are almost always a mistake)
-       but we haven't got round to it. If you actually have trouble with
-       this, let us know and we'll move it up our priority list.
-
-       If you're running into this limit, you may want to consider using
-       dynamic port forwarding instead; see section 3.5.
-
-  10.4 `The first cipher supported by the server is ... below the
+  10.3 `The first cipher supported by the server is ... below the
        configured warning threshold'
 
        This occurs when the SSH server does not offer any ciphers which you
@@ -6061,7 +6056,7 @@ Chapter 10: Common error messages
 
        See section 4.18.5 for more information on this message.
 
-  10.5 `Server sent disconnect message type 2 (protocol error): "Too many
+  10.4 `Server sent disconnect message type 2 (protocol error): "Too many
        authentication failures for root"'
 
        This message is produced by an OpenSSH (or Sun SSH) server if it
@@ -6080,7 +6075,7 @@ Chapter 10: Common error messages
        authentication or (for Sun SSH only) by increasing `MaxAuthTries' in
        `sshd_config'.
 
-  10.6 `Out of memory'
+  10.5 `Out of memory'
 
        This occurs when PuTTY tries to allocate more memory than the system
        can give it. This _may_ happen for genuine reasons: if the computer
@@ -6109,7 +6104,7 @@ Chapter 10: Common error messages
        from your login scripts instead it will try to interpret them as a
        message length. See question A.7.6 for details of this.
 
-  10.7 `Internal error', `Internal fault', `Assertion failed'
+  10.6 `Internal error', `Internal fault', `Assertion failed'
 
        Any error beginning with the word `Internal' should _never_ occur.
        If it does, there is a bug in PuTTY by definition; please see
@@ -6119,7 +6114,7 @@ Chapter 10: Common error messages
        bug in PuTTY. Please report it to us, and include the exact text
        from the error message box.
 
-  10.8 `Unable to use this private key file', `Couldn't load private key',
+  10.7 `Unable to use this private key file', `Couldn't load private key',
        `Key is of wrong type'
 
        Various forms of this error are printed in the PuTTY window, or
@@ -6141,7 +6136,7 @@ Chapter 10: Common error messages
        tools, in which case you need to import it into PuTTY's native
        format (`*.PPK') using PuTTYgen - see section 8.2.12.
 
-  10.9 `Server refused our public key' or `Key refused'
+  10.8 `Server refused our public key' or `Key refused'
 
        Various forms of this error are printed in the PuTTY window, or
        written to the PuTTY Event Log (see section 3.1.3.1) when trying
@@ -6163,7 +6158,7 @@ Chapter 10: Common error messages
 
        Section 8.3 has some hints on server-side public key setup.
 
- 10.10 `Access denied', `Authentication refused'
+  10.9 `Access denied', `Authentication refused'
 
        Various forms of this error are printed in the PuTTY window,
        or written to the PuTTY Event Log (see section 3.1.3.1) during
@@ -6181,14 +6176,14 @@ Chapter 10: Common error messages
        transit. Upgrade your server, or use the workarounds described in
        section 4.25.1 and possibly section 4.25.2.
 
- 10.11 `No supported authentication methods available'
+ 10.10 `No supported authentication methods available'
 
        This error indicates that PuTTY has run out of ways to authenticate
        you to an SSH server. This may be because PuTTY has TIS or keyboard-
        interactive authentication disabled, in which case section 4.20.4
        and section 4.20.5.
 
- 10.12 `Incorrect CRC received on packet' or `Incorrect MAC received on
+ 10.11 `Incorrect CRC received on packet' or `Incorrect MAC received on
        packet'
 
        This error occurs when PuTTY decrypts an SSH packet and its checksum
@@ -6208,7 +6203,7 @@ Chapter 10: Common error messages
        A known server problem which can cause this error is described in
        question A.7.16 in the FAQ.
 
- 10.13 `Incoming packet was garbled on decryption'
+ 10.12 `Incoming packet was garbled on decryption'
 
        This error occurs when PuTTY decrypts an SSH packet and the
        decrypted data makes no sense. This probably means something has
@@ -6224,7 +6219,7 @@ Chapter 10: Common error messages
        Another known server problem which can cause this error is described
        in question A.7.16 in the FAQ.
 
- 10.14 `PuTTY X11 proxy: _various errors_'
+ 10.13 `PuTTY X11 proxy: _various errors_'
 
        This family of errors are reported when PuTTY is doing X forwarding.
        They are sent back to the X application running on the SSH server,
@@ -6255,7 +6250,7 @@ Chapter 10: Common error messages
        this depends on your particular system; in fact many modern versions
        of `su' do it automatically.
 
- 10.15 `Network error: Software caused connection abort'
+ 10.14 `Network error: Software caused connection abort'
 
        This is a generic error produced by the Windows network code when
        it kills an established connection for some reason. For example, it
@@ -6281,7 +6276,7 @@ Chapter 10: Common error messages
        represent a bug in PuTTY. The problem is between you, your Windows
        system, your network and the remote system.
 
- 10.16 `Network error: Connection reset by peer'
+ 10.15 `Network error: Connection reset by peer'
 
        This error occurs when the machines at each end of a network
        connection lose track of the state of the connection between them.
@@ -6298,7 +6293,7 @@ Chapter 10: Common error messages
        without seeing a connection reset from the server, for instance if
        the connection to the network is lost.
 
- 10.17 `Network error: Connection refused'
+ 10.16 `Network error: Connection refused'
 
        This error means that the network connection PuTTY tried to make to
        your server was rejected by the server. Usually this happens because
@@ -6309,7 +6304,7 @@ Chapter 10: Common error messages
        or Rlogin), and check that the port number is correct. If that
        fails, consult the administrator of your server.
 
- 10.18 `Network error: Connection timed out'
+ 10.17 `Network error: Connection timed out'
 
        This error means that the network connection PuTTY tried to make to
        your server received no response at all from the server. Usually
@@ -6886,7 +6881,7 @@ A.2.11 Can PSCP or PSFTP transfer files in ASCII mode?
 
        One possible cause of this that used to be common is a bug in old
        SSH-2 servers distributed by ssh.com. (This is not the only possible
-       cause; see section 10.12 in the documentation.) Version 2.3.0 and
+       cause; see section 10.11 in the documentation.) Version 2.3.0 and
        below of their SSH-2 server constructs Message Authentication Codes
        in the wrong way, and expects the client to construct them in the
        same wrong way. PuTTY constructs the MACs correctly by default, and
@@ -7294,7 +7289,7 @@ A.7.22 Do you want to hear about `Software caused connection abort'?
        we'd like to hear about any occurrences of this error. Since the
        release of PuTTY 0.54, however, we've been convinced that this error
        doesn't indicate that PuTTY's doing anything wrong, and we don't
-       need to hear about further occurrences. See section 10.15 for our
+       need to hear about further occurrences. See section 10.14 for our
        current documentation of this error.
 
 A.7.23 My SSH-2 session locks up for a few seconds every so often.
@@ -7317,6 +7312,22 @@ A.7.24 PuTTY fails to start up. Windows claims that `the application
        This is caused by a bug in certain versions of Windows XP which is
        triggered by PuTTY 0.58. This was fixed in 0.59. The `xp-wont-run'
        entry in PuTTY's wishlist has more details.
+
+A.7.25 When I put PuTTY in C:\WINDOWS\SYSTEM32 on my 64-bit Windows system,
+       `Duplicate Session' doesn't work.
+
+       The short answer is not to put the PuTTY executables in that
+       location.
+
+       On 64-bit systems, C:\WINDOWS\SYSTEM32 is intended to
+       contain only 64-bit binaries; Windows' 32-bit binaries live
+       in C:\WINDOWS\SYSWOW64. When a 32-bit program such as PuTTY
+       runs on a 64-bit system, it cannot by default see the `real'
+       C:\WINDOWS\SYSTEM32 at all, because the File System Redirector
+       arranges that the running program sees the appropriate kind of
+       binaries in SYSTEM32. Thus, operations in the PuTTY suite that
+       involve it accessing its own executables, such as `New Session' and
+       `Duplicate Session', will not work.
 
    A.8 Security questions
 
@@ -7871,8 +7882,8 @@ Appendix B: Feedback and bug reporting
 
         -  Tell us what kind of server you are connecting to; what OS, and
            if possible what SSH server (if you're using SSH). You can get
-           some of this information from the PuTTY Event Log (see section 3
-           .1.3.1 in the manual).
+           some of this information from the PuTTY Event Log (see section
+           3.1.3.1 in the manual).
 
         -  Send us the contents of the PuTTY Event Log, unless you have a
            specific reason not to (for example, if it contains confidential
@@ -8129,7 +8140,7 @@ Appendix B: Feedback and bug reporting
 Appendix C: PuTTY Licence
 -------------------------
 
-       PuTTY is copyright 1997-2011 Simon Tatham.
+       PuTTY is copyright 1997-2013 Simon Tatham.
 
        Portions copyright Robert de Bath, Joris van Rantwijk, Delian
        Delchev, Andreas Schultz, Jeroen Massar, Wez Furlong, Nicolas Barry,
@@ -8726,4 +8737,5 @@ Appendix F: SSH-2 names specified for PuTTY
            These were used in drafts of what eventually became RFC 4345.
            They have been superseded by arcfour128 and arcfour256.
 
-[PuTTY release 0.62]
+       ersionid PuTTY release 0.63
+

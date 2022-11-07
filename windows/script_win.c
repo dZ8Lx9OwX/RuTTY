@@ -1,13 +1,11 @@
-/* script_win.c  version 0.13
+/* script_win.c
 
-  part of rutty - a modified version of putty
-  Copyright 2013, Ernst Dijk
-
+  part of rutty
+  record and replay putty, scripting the easy way
 */
 
-extern Config cfg;  /* defined in window.c */
 extern void *ldisc;  /* defined in window.c */
-extern HWND hwnd;  /* in winstuff.h */
+extern HWND hwnd;    /* in winstuff.h */
 
 
 /* sort of copy of prompt_keyfile in winpgen.c
@@ -17,7 +15,7 @@ int prompt_scriptfile(HWND hwnd, char * filename)
     OPENFILENAME of;
     memset(&of, 0, sizeof(of));
     of.hwndOwner = hwnd;
-	  of.lpstrFilter = "All Files (*.*)\0*\0\0\0";
+    of.lpstrFilter = "All Files (*.*)\0*\0\0\0";
     of.lpstrCustomFilter = NULL;
     of.nFilterIndex = 1;
     of.lpstrFile = filename;
@@ -42,18 +40,18 @@ void script_fail(char * message)
 */
 void script_menu(ScriptData * scriptdata)
 {
-	int i;
+  int i;
   for (i = 0; i < lenof(popup_menus); i++)
-	{
-		if(scriptdata->runs)
-		{
-              ModifyMenu(popup_menus[i].menu, IDM_SCRIPTSEND, MF_BYCOMMAND | MF_ENABLED, IDM_SCRIPTHALT, "Stop sending script");
-		}
-		else
-		{
-		  ModifyMenu(popup_menus[i].menu, IDM_SCRIPTHALT, MF_BYCOMMAND | MF_ENABLED, IDM_SCRIPTSEND, "Send script file");
-		}
-	}
+  {
+    if(scriptdata->runs)
+    {
+      ModifyMenu(popup_menus[i].menu, IDM_SCRIPTSEND, MF_BYCOMMAND | MF_ENABLED, IDM_SCRIPTHALT, "Stop sending script");
+    }
+    else
+    {
+      ModifyMenu(popup_menus[i].menu, IDM_SCRIPTHALT, MF_BYCOMMAND | MF_ENABLED, IDM_SCRIPTSEND, "Send script file");
+    }
+  }
 }
 
 

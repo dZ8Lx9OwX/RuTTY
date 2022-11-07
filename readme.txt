@@ -1,4 +1,4 @@
-RuTTY 0.13
+RuTTY 0.14
 
 Record and Replay PuTTY, RRPuTTY, RuTTY !
 see RuTTY.rtf for documentation
@@ -8,11 +8,10 @@ rutty.exe	windows executable
 RuTTY.rtf	documentation 
 
 notes:
-RuTTY is a modified version of PuTTY release 0.62
+RuTTY is a modified version of PuTTY release 0.63
 only PuTTY, no other tools from the suite
 only windows
 
-build:
-RuTTY.exe was build with minGW/gcc:
-make -f makefile.mgw VER="-DRELEASE=0.62 -Drutty=0.13" putty.exe
+build with minGW/gcc:
+make -f makefile.mgw VER="-DRELEASE=0.63 -Drutty=0.14" putty.exe
 

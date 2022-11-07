@@ -44,7 +44,7 @@ static struct dlgparam dp;
 static char **events = NULL;
 static int nevents = 0, negsize = 0;
 
-extern Config cfg;		       /* defined in window.c */
+extern Conf *conf;		       /* defined in window.c */
 
 #define PRINTER_DISABLED_STRING "None (printing disabled)"
 
@@ -167,12 +167,12 @@ static int CALLBACK LicenceProc(HWND hwnd, UINT msg,
     switch (msg) {
       case WM_INITDIALOG:
 	{
-/* rutty: */
+  /* rutty: */
 #ifndef rutty  
 	    char *str = dupprintf("%s Licence", appname);
 	    SetWindowText(hwnd, str);
 	    sfree(str);
-#endif      
+#endif  /* rutty */    
 	}
 	return 1;
       case WM_COMMAND:
@@ -198,13 +198,13 @@ static int CALLBACK AboutProc(HWND hwnd, UINT msg,
     switch (msg) {
       case WM_INITDIALOG:
 /* rutty: */      
-#ifndef rutty  
+#ifndef rutty         
 	str = dupprintf("About %s", appname);
 	SetWindowText(hwnd, str);
 	sfree(str);
-	SetDlgItemText(hwnd, IDA_TEXT1, appname); 
+	SetDlgItemText(hwnd, IDA_TEXT1, appname);
 	SetDlgItemText(hwnd, IDA_VERSION, ver);
-#endif  
+#endif  /* rutty */   
 	return 1;
       case WM_COMMAND:
 	switch (LOWORD(wParam)) {
@@ -234,7 +234,7 @@ static int CALLBACK AboutProc(HWND hwnd, UINT msg,
 			 "http://sourceforge.net/projects/rutty/",
 			 0, 0, SW_SHOWDEFAULT);
 	    return 0;
-#endif  /* rutty */
+#endif  /* rutty */            
 	}
 	return 0;
       case WM_CLOSE:
@@ -243,7 +243,6 @@ static int CALLBACK AboutProc(HWND hwnd, UINT msg,
     }
     return 0;
 }
-
 
 static int SaneDialogBox(HINSTANCE hinst,
 			 LPCTSTR tmpl,
@@ -515,7 +514,7 @@ static int CALLBACK GenericMainDlgProc(HWND hwnd, UINT msg,
 	     */
 	    TreeView_SelectItem(treeview, hfirst);
 	}
-	
+
 	/*
 	 * Set focus into the first available control.
 	 */
@@ -664,7 +663,7 @@ int do_config(void)
     dp_add_tree(&dp, &ctrls_panel);
     dp.wintitle = dupprintf("%s Configuration", appname);
     dp.errtitle = dupprintf("%s Error", appname);
-    dp.data = &cfg;
+    dp.data = conf;
     dlg_auto_set_fixed_pitch_flag(&dp);
     dp.shortcuts['g'] = TRUE;	       /* the treeview: `Cate&gory' */
 
@@ -682,15 +681,15 @@ int do_config(void)
 
 int do_reconfig(HWND hwnd, int protcfginfo)
 {
-    Config backup_cfg;
-    int ret;
+    Conf *backup_conf;
+    int ret, protocol;
 
-    backup_cfg = cfg;		       /* structure copy */
+    backup_conf = conf_copy(conf);
 
     ctrlbox = ctrl_new_box();
-    setup_config_box(ctrlbox, TRUE, cfg.protocol, protcfginfo);
-    win_setup_config_box(ctrlbox, &dp.hwnd, has_help(), TRUE,
-                         cfg.protocol);
+    protocol = conf_get_int(conf, CONF_protocol);
+    setup_config_box(ctrlbox, TRUE, protocol, protcfginfo);
+    win_setup_config_box(ctrlbox, &dp.hwnd, has_help(), TRUE, protocol);
     dp_init(&dp);
     winctrl_init(&ctrls_base);
     winctrl_init(&ctrls_panel);
@@ -698,7 +697,7 @@ int do_reconfig(HWND hwnd, int protcfginfo)
     dp_add_tree(&dp, &ctrls_panel);
     dp.wintitle = dupprintf("%s Reconfiguration", appname);
     dp.errtitle = dupprintf("%s Error", appname);
-    dp.data = &cfg;
+    dp.data = conf;
     dlg_auto_set_fixed_pitch_flag(&dp);
     dp.shortcuts['g'] = TRUE;	       /* the treeview: `Cate&gory' */
 
@@ -711,7 +710,9 @@ int do_reconfig(HWND hwnd, int protcfginfo)
     dp_cleanup(&dp);
 
     if (!ret)
-	cfg = backup_cfg;	       /* structure copy */
+	conf_copy_into(conf, backup_conf);
+
+    conf_free(backup_conf);
 
     return ret;
 }
@@ -872,7 +873,7 @@ int askalg(void *frontend, const char *algtype, const char *algname,
  * Ask whether to wipe a session log file before writing to it.
  * Returns 2 for wipe, 1 for append, 0 for cancel (don't log).
  */
-int askappend(void *frontend, Filename filename,
+int askappend(void *frontend, Filename *filename,
 	      void (*callback)(void *ctx, int result), void *ctx)
 {
     static const char msgtemplate[] =
@@ -886,7 +887,7 @@ int askappend(void *frontend, Filename filename,
     char *mbtitle;
     int mbret;
 
-    message = dupprintf(msgtemplate, FILENAME_MAX, filename.path);
+    message = dupprintf(msgtemplate, FILENAME_MAX, filename->path);
     mbtitle = dupprintf("%s Log to File", appname);
 
     mbret = MessageBox(NULL, message, mbtitle,

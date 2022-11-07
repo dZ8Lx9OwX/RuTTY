@@ -20,11 +20,11 @@ Specify the X display on which to open \fBputtytel\fP. (Note this option has a d
 .IP "\fB\-fn\fP \fIfont-name\fP"
 Specify the font to use for normal text displayed in the terminal.
 .IP "\fB\-fb\fP \fIfont-name\fP"
-Specify the font to use for bold text displayed in the terminal. If the \fBBoldAsColour\fP resource is set to 1 (the default), bold text will be displayed in different colours instead of a different font, so this option will be ignored. If \fBBoldAsColour\fP is set to 0 and you do not specify a bold font, \fBputtytel\fP will overprint the normal font to make it look bolder.
+Specify the font to use for bold text displayed in the terminal. If the \fBBoldAsColour\fP resource is set to 1 (the default), bold text will be displayed in different colours instead of a different font, so this option will be ignored. If \fBBoldAsColour\fP is set to 0 or 2 and you do not specify a bold font, \fBputtytel\fP will overprint the normal font to make it look bolder.
 .IP "\fB\-fw\fP \fIfont-name\fP"
 Specify the font to use for double-width characters (typically Chinese, Japanese and Korean text) displayed in the terminal.
 .IP "\fB\-fwb\fP \fIfont-name\fP"
-Specify the font to use for bold double-width characters (typically Chinese, Japanese and Korean text). Like \fB-fb\fP, this will be ignored unless the \fBBoldAsColour\fP resource is set to 0.
+Specify the font to use for bold double-width characters (typically Chinese, Japanese and Korean text). Like \fB-fb\fP, this will be ignored unless the \fBBoldAsColour\fP resource is set to 0 or 2.
 .IP "\fB\-geometry\fP \fIgeometry\fP"
 Specify the size of the terminal, in rows and columns of text. See \fIX(7)\fP for more information on the syntax of geometry specifications.
 .IP "\fB\-sl\fP \fIlines\fP"
@@ -34,9 +34,9 @@ Specify the foreground colour to use for normal text.
 .IP "\fB\-bg\fP \fIcolour\fP"
 Specify the background colour to use for normal text.
 .IP "\fB\-bfg\fP \fIcolour\fP"
-Specify the foreground colour to use for bold text, if the \fBBoldAsColour\fP resource is set to 1 (the default).
+Specify the foreground colour to use for bold text, if the \fBBoldAsColour\fP resource is set to 1 (the default) or 2.
 .IP "\fB\-bbg\fP \fIcolour\fP"
-Specify the foreground colour to use for bold reverse-video text, if the \fBBoldAsColour\fP resource is set to 1 (the default). (This colour is best thought of as the bold version of the background colour; so it only appears when text is displayed \fIin\fP the background colour.)
+Specify the foreground colour to use for bold reverse-video text, if the \fBBoldAsColour\fP resource is set to 1 (the default) or 2. (This colour is best thought of as the bold version of the background colour; so it only appears when text is displayed \fIin\fP the background colour.)
 .IP "\fB\-cfg\fP \fIcolour\fP"
 Specify the foreground colour to use for text covered by the cursor.
 .IP "\fB\-cbg\fP \fIcolour\fP"

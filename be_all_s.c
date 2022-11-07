@@ -20,7 +20,7 @@
 const char *const appname = "RuTTY";
 #else
 const char *const appname = "PuTTY";
-#endif
+#endif /* rutty */
 
 #ifdef TELNET_DEFAULT
 const int be_default_protocol = PROT_TELNET;
