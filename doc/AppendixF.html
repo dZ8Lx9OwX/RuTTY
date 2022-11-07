@@ -40,6 +40,10 @@ This is sent by a client to announce that it will not have more than one channel
 </dt>
 <dd>
 PuTTY sends this request along with some <code>SSH_MSG_CHANNEL_WINDOW_ADJUST</code> messages as part of its window-size tuning. It can be sent on any type of channel. There is no message-specific data. Servers MUST treat it as an unrecognised request and respond with <code>SSH_MSG_CHANNEL_FAILURE</code>.
+<p>
+(Some SSH servers get confused by this message, so there is a bug-compatibility mode for disabling it. See <a href="Chapter4.html#config-ssh-bug-winadj">section 4.28.5</a>.) 
+</p>
+
 </dd>
 </dl>
 <h2><a name="sshnames-kex"></a><a name="SF.2"></a>F.2 Key exchange method names</h2>
@@ -91,9 +95,7 @@ These appeared in various drafts of what eventually became RFC&nbsp;4432. They h
 These were used in drafts of what eventually became RFC&nbsp;4345. They have been superseded by <code>arcfour128</code> and <code>arcfour256</code>.
 </dd>
 </dl>
-<p>
-ersionid PuTTY release 0.63
-</p>
 
-<hr><p>If you want to provide feedback on this manual or on the PuTTY tools themselves, see the <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/feedback.html">Feedback page</a>.</p><address></address></body>
+<hr><p>If you want to provide feedback on this manual or on the PuTTY tools themselves, see the <a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/feedback.html">Feedback page</a>.</p><address>
+[PuTTY release 0.71]</address></body>
 </html>

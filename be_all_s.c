@@ -15,12 +15,13 @@
  * declarations of appname, for as long as I can...
  */
 
-/* rutty: */
+ /* rutty: */
 #ifdef rutty
 const char *const appname = "RuTTY";
 #else
 const char *const appname = "PuTTY";
 #endif /* rutty */
+
 
 #ifdef TELNET_DEFAULT
 const int be_default_protocol = PROT_TELNET;
@@ -28,7 +29,7 @@ const int be_default_protocol = PROT_TELNET;
 const int be_default_protocol = PROT_SSH;
 #endif
 
-Backend *backends[] = {
+const struct BackendVtable *const backends[] = {
     &ssh_backend,
     &telnet_backend,
     &rlogin_backend,

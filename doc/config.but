@@ -1,5 +1,3 @@
-\define{versionidconfig} \versionid $Id: config.but 9846 2013-05-28 23:46:44Z jacob $
-
 \C{config} Configuring PuTTY
 
 This chapter describes all the \i{configuration options} in PuTTY.
@@ -209,6 +207,9 @@ digits.
 
 \b \c{&H} will be replaced by the host name you are connecting to.
 
+\b \c{&P} will be replaced by the port number you are connecting to on
+the target host.
+
 For example, if you enter the host name
 \c{c:\\puttylogs\\log-&h-&y&m&d-&t.dat}, you will end up with files looking
 like
@@ -244,6 +245,15 @@ slowly with logging enabled, you could try unchecking this option. Be
 warned that the log file may not always be up to date as a result
 (although it will of course be flushed when it is closed, for instance
 at the end of a session).
+
+\S{config-logheader} \I{log file, header}\q{Include header}
+
+\cfg{winhelp-topic}{logging.header}
+
+This option allows you to choose whether to include a header line
+with the date and time when the log file is opened. It may be useful to
+disable this if the log file is being used as realtime input to other
+programs that don't expect the header line.
 
 \S{config-logssh} Options specific to \i{SSH packet log}ging
 
@@ -498,8 +508,8 @@ instead of relying on the automatic detection.
 \cfg{winhelp-topic}{terminal.printing}
 
 A lot of VT100-compatible terminals support printing under control
-of the remote server. PuTTY supports this feature as well, but it is
-turned off by default.
+of the remote server (sometimes called \q{passthrough printing}).
+PuTTY supports this feature as well, but it is turned off by default.
 
 To enable remote-controlled printing, choose a printer from the
 \q{Printer to send ANSI printer output to} drop-down list box. This
@@ -932,6 +942,15 @@ setting you want if you have no better ideas.
 
 \dd PuTTY responds with the actual window title. This is dangerous for
 the reasons described above.
+
+\S{config-features-clearscroll} Disabling remote \i{scrollback clearing}
+
+\cfg{winhelp-topic}{features.clearscroll}
+
+PuTTY has the ability to clear the terminal's scrollback buffer in
+response to a command from the server. If you find PuTTY is doing this
+unexpectedly or inconveniently, you can tell PuTTY not to respond to
+that server command.
 
 \S{config-features-dbackspace} Disabling \i{destructive backspace}
 
@@ -1371,31 +1390,47 @@ Note that this option only applies to line-drawing characters which
 characters that were received as Unicode code points will paste as
 Unicode always.
 
+\S{config-utf8linedraw} Combining VT100 line-drawing with UTF-8
+
+\cfg{winhelp-topic}{translation.utf8linedraw}
+
+If PuTTY is configured to treat data from the server as encoded in
+UTF-8, then by default it disables the older VT100-style system of
+control sequences that cause the lower-case letters to be temporarily
+replaced by line drawing characters.
+
+The rationale is that in UTF-8 mode you don't need those control
+sequences anyway, because all the line-drawing characters they access
+are available as Unicode characters already, so there's no need for
+applications to put the terminal into a special state to get at them.
+
+Also, it removes a risk of the terminal \e{accidentally} getting into
+that state: if you accidentally write uncontrolled binary data to a
+non-UTF-8 terminal, it can be surprisingly common to find that your
+next shell prompt appears as a sequence of line-drawing characters and
+then you have to remember or look up how to get out of that mode. So
+by default, UTF-8 mode simply doesn't \e{have} a confusing mode like
+that to get into, accidentally or on purpose.
+
+However, not all applications will see it that way. Even UTF-8
+terminal users will still sometimes have to run software that tries to
+print line-drawing characters in the old-fashioned way. So the
+configuration option \q{Enable VT100 line drawing even in UTF-8 mode}
+puts PuTTY into a hybrid mode in which it understands the VT100-style
+control sequences that change the meaning of the ASCII lower case
+letters, \e{and} understands UTF-8.
+
 \H{config-selection} The Selection panel
 
 The Selection panel allows you to control the way \i{copy and paste}
 work in the PuTTY window.
-
-\S{config-rtfpaste} Pasting in \i{Rich Text Format}
-
-\cfg{winhelp-topic}{selection.rtf}
-
-If you enable \q{Paste to clipboard in RTF as well as plain text},
-PuTTY will write formatting information to the clipboard as well as
-the actual text you copy. The effect of this is
-that if you paste into (say) a word processor, the text will appear
-in the word processor in the same \i{font}, \i{colour}, and style 
-(e.g. bold, underline) PuTTY was using to display it.
-
-This option can easily be inconvenient, so by default it is
-disabled.
 
 \S{config-mouse} Changing the actions of the mouse buttons
 
 \cfg{winhelp-topic}{selection.buttons}
 
 PuTTY's copy and paste mechanism is by default modelled on the Unix
-\c{xterm} application. The X Window System uses a three-button mouse,
+\i\c{xterm} application. The X Window System uses a three-button mouse,
 and the convention is that the \i{left button} \I{selecting text}selects,
 the \i{right button} extends an existing selection, and the
 \i{middle button} pastes.
@@ -1459,13 +1494,112 @@ select a rectangular block. Using the \q{Default selection mode}
 control, you can set \i{rectangular selection} as the default, and then
 you have to hold down Alt to get the \e{normal} behaviour.
 
-\S{config-charclasses} Configuring \i{word-by-word selection}
+\S{config-clipboards} Assigning copy and paste actions to clipboards
 
-\cfg{winhelp-topic}{selection.charclasses}
+Here you can configure which clipboard(s) are written or read by
+PuTTY's various copy and paste actions.
 
-PuTTY will select a word at a time in the terminal window if you
-\i{double-click} to begin the drag. This panel allows you to control
-precisely what is considered to be a word.
+The X Window System (which underlies most Unix graphical interfaces)
+provides multiple clipboards (or \q{\i{selections}}), and many
+applications support more than one of them by a different user
+interface mechanism.
+
+The two most commonly used selections are called \cq{\i{PRIMARY}} and
+\cq{\I{CLIPBOARD selection}CLIPBOARD}; in applications supporting both,
+the usual behaviour is that \cw{PRIMARY} is used by mouse-only actions
+(selecting text automatically copies it to \cw{PRIMARY}, and
+\i{middle-clicking} pastes from \cw{PRIMARY}), whereas \cw{CLIPBOARD}
+is used by explicit Copy and Paste menu items or keypresses such as
+\i{Ctrl-C} and \i{Ctrl-V}.
+
+On other platforms such as Windows, where there is a single system
+clipboard, PuTTY provides a second clipboard-like facility by permitting
+you to paste the text you last selected in \e{this window}, whether or
+not it is currently also in the system clipboard. This is not enabled
+by default.
+
+\S2{config-selection-autocopy} \q{Auto-copy selected text}
+
+\cfg{winhelp-topic}{selection.autocopy}
+
+The checkbox \q{Auto-copy selected text to system clipboard} controls
+whether or not selecting text in the PuTTY terminal window
+automatically has the side effect of copying it to the system
+clipboard, without requiring a separate user interface action.
+
+On X, the wording of this option is changed slightly so that
+\cq{CLIPBOARD} is mentioned in place of the \q{system clipboard}. Text
+selected in the terminal window will \e{always} be automatically
+placed in the \cw{PRIMARY} selection, but if you tick this box, it
+will \e{also} be placed in \cq{CLIPBOARD} at the same time.
+
+\S2{config-selection-clipactions} Choosing a clipboard for UI actions
+
+\cfg{winhelp-topic}{selection.clipactions}
+
+PuTTY has three user-interface actions which can be configured to
+paste into the terminal (not counting menu items). You can click
+whichever mouse button (if any) is configured to paste (see
+\k{config-mouse}); you can press \i{Shift-Ins}; or you can press
+\i{Ctrl-Shift-V}, although that action is not enabled by default.
+
+You can configure which of the available clipboards each of these
+actions pastes from (including turning the paste action off
+completely). On platforms with a single system clipboard, the
+available options are to paste from that clipboard or to paste from
+PuTTY's internal memory of the \i{last selected text} within that
+window. On X, the standard options are \cw{CLIPBOARD} or \cw{PRIMARY}.
+
+(\cw{PRIMARY} is conceptually similar in that it \e{also} refers to
+the last selected text \dash just across all applications instead of
+just this window.)
+
+The two keyboard options each come with a corresponding key to copy
+\e{to} the same clipboard. Whatever you configure Shift-Ins to paste
+from, \i{Ctrl-Ins} will copy to the same location; similarly,
+\i{Ctrl-Shift-C} will copy to whatever Ctrl-Shift-V pastes from.
+
+On X, you can also enter a selection name of your choice. For example,
+there is a rarely-used standard selection called \cq{\i{SECONDARY}}, which
+Emacs (for example) can work with if you hold down the Meta key while
+dragging to select or clicking to paste; if you configure a PuTTY
+keyboard action to access this clipboard, then you can interoperate
+with other applications' use of it. Another thing you could do would
+be to invent a clipboard name yourself, to create a special clipboard
+shared \e{only} between instances of PuTTY, or between just instances
+configured in that particular way.
+
+\S{config-paste-ctrl-char} \q{Permit control characters in pasted text}
+
+\cfg{winhelp-topic}{selection.pastectrl}
+
+It is possible for the clipboard to contain not just text (with
+newlines and tabs) but also control characters such as ESC which could
+have surprising effects if pasted into a terminal session, depending
+on what program is running on the server side. Copying text from a
+mischievous web page could put such characters onto the clipboard.
+
+By default, PuTTY filters out the more unusual control characters,
+only letting through the more obvious text-formatting characters
+(newlines, tab, backspace, and DEL).
+
+Setting this option stops this filtering; on paste, any character on
+the clipboard is sent to the session uncensored. This might be useful
+if you are deliberately using control character pasting as a simple
+form of scripting, for instance.
+
+\H{config-selection-copy} The Copy panel
+
+The Copy configuration panel controls behaviour specifically related to
+copying from the terminal window to the clipboard.
+
+\S{config-charclasses} Character classes
+
+\cfg{winhelp-topic}{copy.charclasses}
+
+PuTTY will \I{word-by-word selection}select a word at a time in the
+terminal window if you \i{double-click} to begin the drag. This section
+allows you to control precisely what is considered to be a word.
 
 Each character is given a \e{class}, which is a small number
 (typically 0, 1 or 2). PuTTY considers a single word to be any
@@ -1500,6 +1634,20 @@ sent by the server. This configuration option controls the
 terminal (see \k{reset-terminal}). However, if you modify this
 option in mid-session using \q{Change Settings}, it will take effect
 immediately.
+
+\S{config-rtfcopy} Copying in \i{Rich Text Format}
+
+\cfg{winhelp-topic}{copy.rtf}
+
+If you enable \q{Copy to clipboard in RTF as well as plain text},
+PuTTY will write formatting information to the clipboard as well as
+the actual text you copy. The effect of this is
+that if you paste into (say) a word processor, the text will appear
+in the word processor in the same \i{font}, \i{colour}, and style 
+(e.g. bold, underline) PuTTY was using to display it.
+
+This option can easily be inconvenient, so by default it is
+disabled.
 
 \H{config-colours} The Colours panel
 
@@ -1539,7 +1687,16 @@ If you do not see \cq{colors#256} in the output, you may need to
 change your terminal setting. On modern Linux machines, you could
 try \cq{xterm-256color}.
 
-\S{config-boldcolour} \q{Indicate bolded text by changing}
+\S{config-truecolour} \q{Allow terminal to use 24-bit colour}
+
+\cfg{winhelp-topic}{colours.truecolour}
+
+This option is enabled by default. If it is disabled, PuTTY will
+ignore any control sequences sent by the server which use the control
+sequences supported by modern terminals to specify arbitrary 24-bit
+RGB colour value.
+
+\S{config-boldcolour} \q{Indicate bolded text by changing...}
 
 \cfg{winhelp-topic}{colours.bold}
 
@@ -1555,6 +1712,10 @@ similarly in other colours). If you change the setting to \q{The font}
 box, bold and non-bold text will be displayed in the same colour, and
 instead the font will change to indicate the difference. If you select
 \q{Both}, the font and the colour will both change.
+
+Some applications rely on \q{\i{bold black}} being distinguishable
+from a black background; if you choose \q{The font}, their text may
+become invisible.
 
 \S{config-logpalette} \q{Attempt to use \i{logical palettes}}
 
@@ -1600,10 +1761,10 @@ and \I{default background}background, and the precise shades of all the
 \I{ANSI colours}ANSI configurable colours (black, red, green, yellow, blue,
 magenta, cyan, and white). You can also modify the precise shades used for
 the \i{bold} versions of these colours; these are used to display bold text
-if you have selected \q{Bolded text is a different colour}, and can also be
-used if the server asks specifically to use them. (Note that \q{Default
-Bold Background} is \e{not} the background colour used for bold text;
-it is only used if the server specifically asks for a bold
+if you have chosen to indicate that by colour (see \k{config-boldcolour}),
+and can also be used if the server asks specifically to use them. (Note
+that \q{Default Bold Background} is \e{not} the background colour used for
+bold text; it is only used if the server specifically asks for a bold
 background.)
 
 \H{config-connection} The Connection panel
@@ -1662,7 +1823,7 @@ Keepalives are only supported in Telnet and SSH; the Rlogin and Raw
 protocols offer no way of implementing them. (For an alternative, see
 \k{config-tcp-keepalives}.)
 
-Note that if you are using \i{SSH-1} and the server has a bug that makes
+Note that if you are using SSH-1 and the server has a bug that makes
 it unable to deal with SSH-1 ignore messages (see
 \k{config-ssh-bug-ignore1}), enabling keepalives will have no effect.
 
@@ -1742,7 +1903,7 @@ arbitrary port (say, \cw{localhost} port 10022) were forwarded to a
 second machine's SSH port (say, \cw{foovax} port 22), and then
 started a second PuTTY connecting to the forwarded port.
 
-In normal usage, the second PuTTY will access the host key cache
+In normal usage, the second PuTTY will access the \i{host key cache}
 under the host name and port it actually connected to (i.e.
 \cw{localhost} port 10022 in this example). Using the logical host
 name option, however, you can configure the second PuTTY to cache
@@ -1756,7 +1917,9 @@ logical host name, you can arrange that PuTTY will not keep asking
 you to reconfirm its host key. Conversely, if you expect to use the
 same local port number for port forwardings to lots of different
 servers, you probably didn't want any particular server's host key
-cached under that local port number.
+cached under that local port number. (For this latter case, you
+could instead explicitly configure host keys in the relevant sessions;
+see \k{config-ssh-kex-manual-hostkeys}.)
 
 If you just enter a host name for this option, PuTTY will cache the
 SSH host key under the default SSH port for that host, irrespective
@@ -1805,9 +1968,10 @@ PuTTY will prompt for a username at the time you make a connection.
 In some environments, such as the networks of large organisations
 implementing \i{single sign-on}, a more sensible default may be to use
 the name of the user logged in to the local operating system (if any);
-this is particularly likely to be useful with \i{GSSAPI} authentication
-(see \k{config-ssh-auth-gssapi}). This control allows you to change
-the default behaviour.
+this is particularly likely to be useful with \i{GSSAPI} key exchange
+and user authentication (see \k{config-ssh-auth-gssapi} and
+\k{config-ssh-gssapi-kex}). This control allows you to change the default
+behaviour.
 
 The current system username is displayed in the dialog as a
 convenience. It is not saved in the configuration; if a saved session
@@ -1939,6 +2103,9 @@ If you want your local proxy command to make a secondary SSH
 connection to a proxy host and then tunnel the primary connection
 over that, you might well want the \c{-nc} command-line option in
 Plink. See \k{using-cmdline-ncmode} for more information.
+
+You can also enable this mode on the command line; see
+\k{using-cmdline-proxycmd}.
 }
 
 \S{config-proxy-exclude} Excluding parts of the network from proxying
@@ -2083,6 +2250,25 @@ the proxy, followed by a command to connect to the desired host and
 port. Note that if you do not include the \c{%user} or \c{%pass}
 tokens in the Telnet command, then the \q{Username} and \q{Password}
 configuration fields will be ignored.
+
+\S{config-proxy-logging} Controlling \i{proxy logging}
+
+\cfg{winhelp-topic}{proxy.logging}
+
+Often the proxy interaction has its own diagnostic output; this is
+particularly the case for local proxy commands.
+
+The setting \q{Print proxy diagnostics in the terminal window} lets
+you control how much of the proxy's diagnostics are printed to the main
+terminal window, along with output from your main session.
+
+By default (\q{No}), proxy diagnostics are only sent to the Event Log;
+with \q{Yes} they are also printed to the terminal, where they may get
+mixed up with your main session. \q{Only until session starts} is a
+compromise; proxy messages will go to the terminal window until the main
+session is deemed to have started (in a protocol-dependent way), which
+is when they're most likely to be interesting; any further proxy-related
+messages during the session will only go to the Event Log.
 
 \H{config-telnet} The \i{Telnet} panel
 
@@ -2260,75 +2446,94 @@ client end. Likewise, data sent by PuTTY to the server is compressed
 first and the server decompresses it at the other end. This can help
 make the most of a low-\i{bandwidth} connection.
 
-\S{config-ssh-prot} \q{Preferred \i{SSH protocol version}}
+\S{config-ssh-prot} \q{\i{SSH protocol version}}
 
 \cfg{winhelp-topic}{ssh.protocol}
 
-This allows you to select whether you would like to use \i{SSH protocol
-version 1} or \I{SSH-2}version 2. \#{FIXME: say something about this elsewhere?}
+This allows you to select whether to use \i{SSH protocol version 2}
+or the older \I{SSH-1}version 1.
 
-PuTTY will attempt to use protocol 1 if the server you connect to
-does not offer protocol 2, and vice versa.
+You should normally leave this at the default of \q{2}. As well as
+having fewer features, the older SSH-1 protocol is no longer
+developed, has many known cryptographic weaknesses, and is generally
+not considered to be secure. PuTTY's protocol 1 implementation is
+provided mainly for compatibility, and is no longer being enhanced.
 
-If you select \q{1 only} or \q{2 only} here, PuTTY will only connect
-if the server you connect to offers the SSH protocol version you
-have specified.
+If a server offers both versions, prefer \q{2}. If you have some
+server or piece of equipment that only talks SSH-1, select \q{1}
+here, and do not treat the resulting connection as secure.
 
-\S{config-ssh-encryption} \ii{Encryption} algorithm selection
+PuTTY will not automatically fall back to the other version of the
+protocol if the server turns out not to match your selection here;
+instead, it will put up an error message and abort the connection.
+This prevents an active attacker downgrading an intended SSH-2
+connection to SSH-1.
 
-\cfg{winhelp-topic}{ssh.ciphers}
+\S{config-ssh-sharing} Sharing an SSH connection between PuTTY tools
 
-PuTTY supports a variety of different \i{encryption algorithm}s, and
-allows you to choose which one you prefer to use. You can do this by
-dragging the algorithms up and down in the list box (or moving them
-using the Up and Down buttons) to specify a preference order. When
-you make an SSH connection, PuTTY will search down the list from the
-top until it finds an algorithm supported by the server, and then
-use that.
+\cfg{winhelp-topic}{ssh.sharing}
 
-PuTTY currently supports the following algorithms:
+The controls in this box allow you to configure PuTTY to reuse an
+existing SSH connection, where possible.
 
-\b \i{AES} (Rijndael) - 256, 192, or 128-bit SDCTR or CBC (SSH-2 only)
+The SSH-2 protocol permits you to run multiple data channels over the
+same SSH connection, so that you can log in just once (and do the
+expensive encryption setup just once) and then have more than one
+terminal window open.
 
-\b \i{Arcfour} (RC4) - 256 or 128-bit stream cipher (SSH-2 only)
+Each instance of PuTTY can still run at most one terminal session, but
+using the controls in this box, you can configure PuTTY to check if
+another instance of itself has already connected to the target host,
+and if so, share that instance's SSH connection instead of starting a
+separate new one.
 
-\b \i{Blowfish} - 256-bit SDCTR (SSH-2 only) or 128-bit CBC
+To enable this feature, just tick the box \q{Share SSH connections if
+possible}. Then, whenever you start up a PuTTY session connecting to a
+particular host, it will try to reuse an existing SSH connection if
+one is available. For example, selecting \q{Duplicate Session} from
+the system menu will launch another session on the same host, and if
+sharing is enabled then it will reuse the existing SSH connection.
 
-\b \ii{Triple-DES} - 168-bit SDCTR (SSH-2 only) or CBC
+When this mode is in use, the first PuTTY that connected to a given
+server becomes the \q{upstream}, which means that it is the one
+managing the real SSH connection. All subsequent PuTTYs which reuse
+the connection are referred to as \q{downstreams}: they do not connect
+to the real server at all, but instead connect to the upstream PuTTY
+via local inter-process communication methods.
 
-\b \ii{Single-DES} - 56-bit CBC (see below for SSH-2)
+For this system to be activated, \e{both} the upstream and downstream
+instances of PuTTY must have the sharing option enabled.
 
-If the algorithm PuTTY finds is below the \q{warn below here} line,
-you will see a warning box when you make the connection:
+The upstream PuTTY can therefore not terminate until all its
+downstreams have closed. This is similar to the effect you get with
+port forwarding or X11 forwarding, in which a PuTTY whose terminal
+session has already finished will still remain open so as to keep
+serving forwarded connections.
 
-\c The first cipher supported by the server
-\c is single-DES, which is below the configured
-\c warning threshold.
-\c Do you want to continue with this connection?
+In case you need to configure this system in more detail, there are
+two additional checkboxes which allow you to specify whether a
+particular PuTTY can act as an upstream or a downstream or both.
+(These boxes only take effect if the main \q{Share SSH connections if
+possible} box is also ticked.) By default both of these boxes are
+ticked, so that multiple PuTTYs started from the same configuration
+will designate one of themselves as the upstream and share a single
+connection; but if for some reason you need a particular PuTTY
+configuration \e{not} to be an upstream (e.g. because you definitely
+need it to close promptly) or not to be a downstream (e.g. because it
+needs to do its own authentication using a special private key) then
+you can untick one or the other of these boxes.
 
-This warns you that the first available encryption is not a very
-secure one. Typically you would put the \q{warn below here} line
-between the encryptions you consider secure and the ones you
-consider substandard. By default, PuTTY supplies a preference order
-intended to reflect a reasonable preference in terms of security and
-speed.
+I have referred to \q{PuTTY} throughout the above discussion, but all
+the other PuTTY tools which make SSH connections can use this
+mechanism too. For example, if PSCP or PSFTP loads a configuration
+with sharing enabled, then it can act as a downstream and use an
+existing SSH connection set up by an instance of GUI PuTTY. The one
+special case is that PSCP and PSFTP will \e{never} act as upstreams.
 
-In SSH-2, the encryption algorithm is negotiated independently for
-each direction of the connection, although PuTTY does not support
-separate configuration of the preference orders. As a result you may
-get two warnings similar to the one above, possibly with different
-encryptions.
-
-Single-DES is not recommended in the SSH-2 protocol
-standards, but one or two server implementations do support it.
-PuTTY can use single-DES to interoperate with
-these servers if you enable the \q{Enable legacy use of single-DES in
-SSH-2} option; by default this is disabled and PuTTY will stick to
-recommended ciphers.
+It is possible to test programmatically for the existence of a live
+upstream using Plink. See \k{plink-option-shareexists}.
 
 \H{config-ssh-kex} The Kex panel
-
-\# FIXME: This whole section is draft. Feel free to revise.
 
 The Kex panel (short for \q{\i{key exchange}}) allows you to configure
 options related to SSH-2 key exchange.
@@ -2360,29 +2565,69 @@ PuTTY supports a variety of SSH-2 key exchange methods, and allows you
 to choose which one you prefer to use; configuration is similar to
 cipher selection (see \k{config-ssh-encryption}).
 
-PuTTY currently supports the following varieties of \i{Diffie-Hellman key
-exchange}:
+PuTTY currently supports the following key exchange methods:
 
-\b \q{Group 14}: a well-known 2048-bit group.
+\b \q{ECDH}: \i{elliptic curve} \i{Diffie-Hellman key exchange}.
 
-\b \q{Group 1}: a well-known 1024-bit group. This is less secure
-\#{FIXME better words} than group 14, but may be faster with slow
-client or server machines, and may be the only method supported by
-older server software.
+\b \q{Group 14}: Diffie-Hellman key exchange with a well-known
+2048-bit group.
+
+\b \q{Group 1}: Diffie-Hellman key exchange with a well-known
+1024-bit group. We no longer recommend using this method, and it's
+not used by default in new installations; however, it may be the
+only method supported by very old server software.
 
 \b \q{\ii{Group exchange}}: with this method, instead of using a fixed
 group, PuTTY requests that the server suggest a group to use for key
 exchange; the server can avoid groups known to be weak, and possibly
 invent new ones over time, without any changes required to PuTTY's
-configuration. We recommend use of this method, if possible.
+configuration. We recommend use of this method instead of the
+well-known groups, if possible.
 
-In addition, PuTTY supports \i{RSA key exchange}, which requires much less
-computational effort on the part of the client, and somewhat less on
-the part of the server, than Diffie-Hellman key exchange.
+\b \q{\i{RSA key exchange}}: this requires much less computational
+effort on the part of the client, and somewhat less on the part of
+the server, than Diffie-Hellman key exchange.
+
+\b \q{GSSAPI key exchange}: see \k{config-ssh-gssapi-kex}.
 
 If the first algorithm PuTTY finds is below the \q{warn below here}
 line, you will see a warning box when you make the connection, similar
 to that for cipher selection (see \k{config-ssh-encryption}).
+
+\S2{config-ssh-gssapi-kex} GSSAPI-based key exchange
+
+PuTTY supports a set of key exchange methods that also incorporates
+GSSAPI-based authentication. They are enabled with the
+\q{Attempt GSSAPI key exchange} checkbox (which also appears on the
+\q{GSSAPI} panel).
+
+PuTTY can only perform the GSSAPI-authenticated key exchange methods
+when using Kerberos V5, and not other GSSAPI mechanisms. If the user
+running PuTTY has current Kerberos V5 credentials, then PuTTY will
+select the GSSAPI key exchange methods in preference to any of the
+ordinary SSH key exchange methods configured in the preference list.
+
+The advantage of doing GSSAPI authentication as part of the SSH key
+exchange is apparent when you are using credential delegation (see
+\k{config-ssh-auth-gssapi-delegation}). The SSH key exchange can be
+repeated later in the session, and this allows your Kerberos V5
+credentials (which are typically short-lived) to be automatically
+re-delegated to the server when they are refreshed on the client.
+(This feature is commonly referred to as \q{\i{cascading credentials}}.)
+
+If your server doesn't support GSSAPI key exchange, it may still
+support GSSAPI in the SSH user authentication phase. This will still
+let you log in using your Kerberos credentials, but will only allow
+you to delegate the credentials that are active at the beginning of
+the session; they can't be refreshed automatically later, in a
+long-running session.
+
+Another effect of GSSAPI key exchange is that it replaces the usual
+SSH mechanism of permanent host keys described in \k{gs-hostkey}.
+So if you use this method, then you won't be asked any interactive
+questions about whether to accept the server's host key. Instead, the
+Kerberos exchange will verify the identity of the host you connect to,
+at the same time as verifying your identity to it.
 
 \S{config-ssh-kex-rekey} \ii{Repeat key exchange}
 
@@ -2426,6 +2671,14 @@ purposes, rekeys have much the same properties as keepalives.
 should bear that in mind when deciding whether to turn them off.)
 Note, however, the the SSH \e{server} can still initiate rekeys.
 
+\b \q{Minutes between GSSAPI checks}, if you're using GSSAPI key
+exchange, specifies how often the GSSAPI credential cache is checked
+to see whether new tickets are available for delegation, or current
+ones are near expiration. If forwarding of GSSAPI credentials is
+enabled, PuTTY will try to rekey as necessary to keep the delegated
+credentials from expiring. Frequent checks are recommended; rekeying
+only happens when needed.
+
 \b \q{Max data before rekey} specifies the amount of data (in bytes)
 that is permitted to flow in either direction before a rekey is
 initiated. If this is set to zero, PuTTY will not rekey due to
@@ -2447,32 +2700,171 @@ used:
 
 Disabling data-based rekeys entirely is a bad idea.  The \i{integrity},
 and to a lesser extent, \i{confidentiality} of the SSH-2 protocol depend
-in part on rekeys occuring before a 32-bit packet sequence number
+in part on rekeys occurring before a 32-bit packet sequence number
 wraps around.  Unlike time-based rekeys, data-based rekeys won't occur
 when the SSH connection is idle, so they shouldn't cause the same
 problems.  The SSH-1 protocol, incidentally, has even weaker integrity
 protection than SSH-2 without rekeys.
 
+\H{config-ssh-hostkey} The Host Keys panel
+
+The Host Keys panel allows you to configure options related to SSH-2
+\i{host key management}.
+
+Host keys are used to prove the server's identity, and assure you that
+the server is not being spoofed (either by a man-in-the-middle attack
+or by completely replacing it on the network). See \k{gs-hostkey} for
+a basic introduction to host keys.
+
+This entire panel is only relevant to SSH protocol version 2; none of
+these settings affect SSH-1 at all.
+
+\S{config-ssh-hostkey-order} \ii{Host key type} selection
+
+\cfg{winhelp-topic}{ssh.hostkey.order}
+
+PuTTY supports a variety of SSH-2 host key types, and allows you to
+choose which one you prefer to use to identify the server.
+Configuration is similar to cipher selection (see
+\k{config-ssh-encryption}).
+
+PuTTY currently supports the following host key types:
+
+\b \q{Ed25519}: \i{Edwards-curve} \i{DSA} using a twisted Edwards
+curve with modulus \cw{2^255-19}.
+
+\b \q{ECDSA}: \i{elliptic curve} \i{DSA} using one of the
+NIST-standardised elliptic curves.
+
+\b \q{DSA}: straightforward \i{DSA} using modular exponentiation.
+
+\b \q{RSA}: the ordinary \i{RSA} algorithm.
+
+If PuTTY already has one or more host keys stored for the server,
+it will prefer to use one of those, even if the server has a key
+type that is higher in the preference order. You can add such a
+key to PuTTY's cache from within an existing session using the
+\q{Special Commands} menu; see \k{using-specials}.
+
+Otherwise, PuTTY will choose a key type based purely on the
+preference order you specify in the configuration.
+
+If the first key type PuTTY finds is below the \q{warn below here}
+line, you will see a warning box when you make the connection, similar
+to that for cipher selection (see \k{config-ssh-encryption}).
+
+\S{config-ssh-kex-manual-hostkeys} \ii{Manually configuring host keys}
+
+\cfg{winhelp-topic}{ssh.kex.manualhostkeys}
+
+In some situations, if PuTTY's automated host key management is not
+doing what you need, you might need to manually configure PuTTY to
+accept a specific host key, or one of a specific set of host keys.
+
+One reason why you might want to do this is because the host name
+PuTTY is connecting to is using round-robin DNS to return one of
+multiple actual servers, and they all have different host keys. In
+that situation, you might need to configure PuTTY to accept any of a
+list of host keys for the possible servers, while still rejecting any
+key not in that list.
+
+Another reason is if PuTTY's automated host key management is
+completely unavailable, e.g. because PuTTY (or Plink or PSFTP, etc) is
+running in a Windows environment without access to the Registry. In
+that situation, you will probably want to use the \cw{-hostkey}
+command-line option to configure the expected host key(s); see
+\k{using-cmdline-hostkey}.
+
+For situations where PuTTY's automated host key management simply
+picks the wrong host name to store a key under, you may want to
+consider setting a \q{logical host name} instead; see
+\k{config-loghost}.
+
+To configure manual host keys via the GUI, enter some text describing
+the host key into the edit box in the \q{Manually configure host keys
+for this connection} container, and press the \q{Add} button. The text
+will appear in the \q{Host keys or fingerprints to accept} list box.
+You can remove keys again with the \q{Remove} button.
+
+The text describing a host key can be in one of the following formats:
+
+\b An MD5-based host key fingerprint of the form displayed in PuTTY's
+Event Log and host key dialog boxes, i.e. sixteen 2-digit hex numbers
+separated by colons.
+
+\b A base64-encoded blob describing an SSH-2 public key in
+OpenSSH's one-line public key format. How you acquire a public key in
+this format is server-dependent; on an OpenSSH server it can typically
+be found in a location like \c{/etc/ssh/ssh_host_rsa_key.pub}.
+
+If this box contains at least one host key or fingerprint when PuTTY
+makes an SSH connection, then PuTTY's automated host key management is
+completely bypassed: the connection will be permitted if and only if
+the host key presented by the server is one of the keys listed in this
+box, and the \I{host key cache}host key store in the Registry will be
+neither read \e{nor written}, unless you explicitly do so.
+
+If the box is empty (as it usually is), then PuTTY's automated host
+key management will work as normal.
+
+\H{config-ssh-encryption} The Cipher panel
+
+\cfg{winhelp-topic}{ssh.ciphers}
+
+PuTTY supports a variety of different \i{encryption algorithm}s, and
+allows you to choose which one you prefer to use. You can do this by
+dragging the algorithms up and down in the list box (or moving them
+using the Up and Down buttons) to specify a preference order. When
+you make an SSH connection, PuTTY will search down the list from the
+top until it finds an algorithm supported by the server, and then
+use that.
+
+PuTTY currently supports the following algorithms:
+
+\b \i{ChaCha20-Poly1305}, a combined cipher and \i{MAC} (SSH-2 only)
+
+\b \i{AES} (Rijndael) - 256, 192, or 128-bit SDCTR or CBC (SSH-2 only)
+
+\b \i{Arcfour} (RC4) - 256 or 128-bit stream cipher (SSH-2 only)
+
+\b \i{Blowfish} - 256-bit SDCTR (SSH-2 only) or 128-bit CBC
+
+\b \ii{Triple-DES} - 168-bit SDCTR (SSH-2 only) or CBC
+
+\b \ii{Single-DES} - 56-bit CBC (see below for SSH-2)
+
+If the algorithm PuTTY finds is below the \q{warn below here} line,
+you will see a warning box when you make the connection:
+
+\c The first cipher supported by the server
+\c is single-DES, which is below the configured
+\c warning threshold.
+\c Do you want to continue with this connection?
+
+This warns you that the first available encryption is not a very
+secure one. Typically you would put the \q{warn below here} line
+between the encryptions you consider secure and the ones you
+consider substandard. By default, PuTTY supplies a preference order
+intended to reflect a reasonable preference in terms of security and
+speed.
+
+In SSH-2, the encryption algorithm is negotiated independently for
+each direction of the connection, although PuTTY does not support
+separate configuration of the preference orders. As a result you may
+get two warnings similar to the one above, possibly with different
+encryptions.
+
+Single-DES is not recommended in the SSH-2 protocol
+standards, but one or two server implementations do support it.
+PuTTY can use single-DES to interoperate with
+these servers if you enable the \q{Enable legacy use of single-DES in
+SSH-2} option; by default this is disabled and PuTTY will stick to
+recommended ciphers.
+
 \H{config-ssh-auth} The Auth panel
 
 The Auth panel allows you to configure \i{authentication} options for
 SSH sessions.
-
-\S{config-ssh-noauth} \q{Bypass authentication entirely}
-
-\cfg{winhelp-topic}{ssh.auth.bypass}
-
-In SSH-2, it is possible to establish a connection without using SSH's
-mechanisms to identify or authenticate oneself to the server. Some
-servers may prefer to handle authentication in the data channel, for
-instance, or may simply require no authentication whatsoever.
-
-By default, PuTTY assumes the server requires authentication (most
-do), and thus must provide a username. If you find you are getting
-unwanted username prompts, you could try checking this option.
-
-This option only affects SSH-2 connections. SSH-1 connections always
-require an authentication step.
 
 \S{config-ssh-banner} \q{Display pre-authentication banner}
 
@@ -2488,6 +2880,34 @@ password or similar credentials (although, unfortunately, not before
 prompting for a login name, due to the nature of the protocol design).
 By unchecking this option, display of the banner can be suppressed
 entirely.
+
+\S{config-ssh-noauth} \q{Bypass authentication entirely}
+
+\cfg{winhelp-topic}{ssh.auth.bypass}
+
+In SSH-2, it is in principle possible to establish a connection
+without using SSH's mechanisms to identify or prove who you are
+to the server. An SSH server could prefer to handle authentication
+in the data channel, for instance, or simply require no user
+authentication whatsoever.
+
+By default, PuTTY assumes the server requires authentication (we've
+never heard of one that doesn't), and thus must start this process
+with a username. If you find you are getting username prompts that
+you cannot answer, you could try enabling this option. However,
+most SSH servers will reject this.
+
+This is not the option you want if you have a username and just want
+PuTTY to remember it; for that see \k{config-username}.
+It's also probably not what if you're trying to set up passwordless
+login to a mainstream SSH server; depending on the server, you
+probably wanted public-key authentication (\k{pubkey})
+or perhaps GSSAPI authentication (\k{config-ssh-auth-gssapi}).
+(These are still forms of authentication, even if you don't have to
+interact with them.)
+
+This option only affects SSH-2 connections. SSH-1 connections always
+require an authentication step.
 
 \S{config-ssh-tryagent} \q{Attempt authentication using Pageant}
 
@@ -2590,10 +3010,16 @@ This key must be in PuTTY's native format (\c{*.\i{PPK}}). If you have a
 private key in another format that you want to use with PuTTY, see
 \k{puttygen-conversions}.
 
-If a key file is specified here, and \i{Pageant} is running (see
-\k{pageant}), PuTTY will first try asking Pageant to authenticate with
-that key, and ignore any other keys Pageant may have. If that fails,
-PuTTY will ask for a passphrase as normal.
+You can use the authentication agent \i{Pageant} so that you do not
+need to explicitly configure a key here; see \k{pageant}.
+
+If a private key file is specified here with Pageant running, PuTTY
+will first try asking Pageant to authenticate with that key, and
+ignore any other keys Pageant may have. If that fails, PuTTY will ask
+for a passphrase as normal. You can also specify a \e{public} key file
+in this case (in RFC 4716 or OpenSSH format), as that's sufficient to
+identify the key to Pageant, but of course if Pageant isn't present
+PuTTY can't fall back to using this file itself.
 
 \H{config-ssh-auth-gssapi} The \i{GSSAPI} panel
 
@@ -2604,17 +3030,30 @@ GSSAPI authentication. This is a mechanism which delegates the
 authentication exchange to a library elsewhere on the client
 machine, which in principle can authenticate in many different ways
 but in practice is usually used with the \i{Kerberos} \i{single sign-on}
-protocol.
+protocol to implement \i{passwordless login}.
 
-GSSAPI is only available in the SSH-2 protocol.
+GSSAPI authentication is only available in the SSH-2 protocol.
 
-The topmost control on the GSSAPI subpanel is the checkbox labelled
-\q{Attempt GSSAPI authentication}. If this is disabled, GSSAPI will
-not be attempted at all and the rest of this panel is unused. If it
-is enabled, GSSAPI authentication will be attempted, and (typically)
-if your client machine has valid Kerberos credentials loaded, then
-PuTTY should be able to authenticate automatically to servers that
-support Kerberos logins.
+PuTTY supports two forms of GSSAPI-based authentication. In one of
+them, the SSH key exchange happens in the normal way, and GSSAPI is
+only involved in authenticating the user. The checkbox labelled
+\q{Attempt GSSAPI authentication} controls this form.
+
+In the other method, GSSAPI-based authentication is combined with the
+SSH key exchange phase. If this succeeds, then the SSH authentication
+step has nothing left to do. See \k{config-ssh-gssapi-kex} for more
+information about this method. The checkbox labelled \q{Attempt GSSAPI
+key exchange} controls this form. (The same checkbox appears on the
+\q{Kex} panel.)
+
+If one or both of these controls is enabled, then GSSAPI
+authentication will be attempted in one form or the other, and
+(typically) if your client machine has valid Kerberos credentials
+loaded, then PuTTY should be able to authenticate automatically to
+servers that support Kerberos logins.
+
+If both of those checkboxes are disabled, PuTTY will not try any form
+of GSSAPI at all, and the rest of this panel will be unused.
 
 \S{config-ssh-auth-gssapi-delegation} \q{Allow GSSAPI credential
 delegation}
@@ -2642,6 +3081,10 @@ administrator of one server is likely to already have access to the
 other services too; so this would typically be less of a risk than
 SSH agent forwarding.
 
+If your connection is not using GSSAPI key exchange, it is possible
+for the delegation to expire during your session. See
+\k{config-ssh-gssapi-kex} for more information.
+
 \S{config-ssh-auth-gssapi-libraries} Preference order for GSSAPI
 libraries
 
@@ -2652,11 +3095,11 @@ method to be accessed through the same interface. Therefore, more
 than one authentication library may exist on your system which can
 be accessed using GSSAPI.
 
-PuTTY contains native support for a few well-known such libraries,
-and will look for all of them on your system and use whichever it
-finds. If more than one exists on your system and you need to use a
-specific one, you can adjust the order in which it will search using
-this preference list control.
+PuTTY contains native support for a few well-known such libraries
+(including Windows' \i{SSPI}), and will look for all of them on your system
+and use whichever it finds. If more than one exists on your system and
+you need to use a specific one, you can adjust the order in which it
+will search using this preference list control.
 
 One of the options in the preference list is to use a user-specified
 GSSAPI library. If the library you want to use is not mentioned by
@@ -2664,6 +3107,13 @@ name in PuTTY's list of options, you can enter its full pathname in
 the \q{User-supplied GSSAPI library path} field, and move the
 \q{User-supplied GSSAPI library} option in the preference list to
 make sure it is selected before anything else.
+
+On Windows, such libraries are files with a \I{DLL}\cw{.dll}
+extension, and must have been built in the same way as the PuTTY
+executable you're running; if you have a 32-bit DLL, you must run a
+32-bit version of PuTTY, and the same with 64-bit (see
+\k{faq-32bit-64bit}). On Unix, shared libraries generally have a
+\cw{.so} extension.
 
 \H{config-ssh-tty} The TTY panel
 
@@ -2694,24 +3144,17 @@ the remote pseudo-terminal. These usually control the server's
 expectation of the local terminal's behaviour.
 
 If your server does not have sensible defaults for these modes, you
-may find that changing them here helps. If you don't understand any of
-this, it's safe to leave these settings alone.
+may find that changing them here helps, although the server is at
+liberty to ignore your changes. If you don't understand any of this,
+it's safe to leave these settings alone.
 
 (None of these settings will have any effect if no pseudo-terminal
 is requested or allocated.)
 
-You can add or modify a mode by selecting it from the drop-down list,
-choosing whether it's set automatically or to a specific value with
-the radio buttons and edit box, and hitting \q{Add}. A mode (or
-several) can be removed from the list by selecting them and hitting
-\q{Remove}. The effect of the mode list is as follows:
-
-\b If a mode is not on the list, it will not be specified to the
-server under any circumstances.
-
-\b If a mode is on the list:
-
-\lcont{
+You can change what happens for a particular mode by selecting it in
+the list, choosing one of the options and specifying the exact value
+if necessary, and hitting \q{Set}. The effect of the options is as
+follows:
 
 \b If the \q{Auto} option is selected, the PuTTY tools will decide
 whether to specify that mode to the server, and if so, will send
@@ -2720,16 +3163,18 @@ a sensible value.
 \lcont{
 
 PuTTY proper will send modes that it has an opinion on (currently only
-the code for the Backspace key, \cw{ERASE}). Plink on Unix
-will propagate appropriate modes from the local terminal, if any.
+the code for the Backspace key, \cw{ERASE}, and whether the character
+set is UTF-8, \cw{IUTF8}). Plink on Unix will propagate appropriate
+modes from the local terminal, if any.
 
 }
+
+\b If \q{Nothing} is selected, no value for the mode will be
+specified to the server under any circumstances.
 
 \b If a value is specified, it will be sent to the server under all
 circumstances. The precise syntax of the value box depends on the
 mode.
-
-}
 
 By default, all of the available modes are listed as \q{Auto},
 which should do the right thing in most circumstances.
@@ -2767,7 +3212,23 @@ character or turn it off entirely.
 
 \b Boolean modes such as \cw{ECHO} and \cw{ICANON} can be specified in
 PuTTY in a variety of ways, such as \cw{true}/\cw{false},
-\cw{yes}/\cw{no}, and \cw{0}/\cw{1}.
+\cw{yes}/\cw{no}, and \cw{0}/\cw{1}. (Explicitly specifying a value of
+\cw{no} is different from not sending the mode at all.)
+
+\b The boolean mode \I{IUTF8 terminal mode}\cw{IUTF8} signals to the
+server whether the terminal character set is \i{UTF-8} or not, for
+purposes such as basic line editing; if this is set incorrectly,
+the backspace key may erase the wrong amount of text, for instance.
+However, simply setting this is not usually sufficient for the server
+to use UTF-8; POSIX servers will generally also require the locale to
+be set (by some server-dependent means), although many newer
+installations default to UTF-8. Also, since this mode was added to the
+SSH protocol much later than the others, \#{circa 2016} many servers
+(particularly older servers) do not honour this mode sent over SSH;
+indeed, a few poorly-written servers object to its mere presence, so
+you may find you need to set it to not be sent at all. When set to
+\q{Auto}, this follows the local configured character set (see
+\k{config-charset}).
 
 \b Terminal speeds are configured elsewhere; see \k{config-termspeed}.
 
@@ -2778,8 +3239,8 @@ PuTTY in a variety of ways, such as \cw{true}/\cw{false},
 The X11 panel allows you to configure \i{forwarding of X11} over an
 SSH connection.
 
-If your server lets you run X Window System applications, X11
-forwarding allows you to securely give those applications access to
+If your server lets you run X Window System \i{graphical applications},
+X11 forwarding allows you to securely give those applications access to
 a local X display on your PC.
 
 To enable X11 forwarding, check the \q{Enable X11 forwarding} box.
@@ -2897,7 +3358,9 @@ needed with \q{Dynamic}), enter a hostname and port number separated
 by a colon, in the \q{Destination} box. Connections received on the
 source port will be directed to this destination. For example, to
 connect to a POP-3 server, you might enter
-\c{popserver.example.com:110}.
+\c{popserver.example.com:110}. (If you need to enter a literal
+\i{IPv6 address}, enclose it in square brackets, for instance
+\cq{[::1]:2200}.)
 
 \b Click the \q{Add} button. Your forwarding details should appear
 in the list box.
@@ -2996,7 +3459,7 @@ you do the same on Linux, you can also use it with IPv4. However,
 ticking \q{Auto} should always give you a port which you can connect
 to using either protocol.
 
-\H{config-ssh-bugs} \I{SSH server bugs}The Bugs panel
+\H{config-ssh-bugs} \I{SSH server bugs}The Bugs and More Bugs panels
 
 Not all SSH servers work properly. Various existing servers have
 bugs in them, which can make it impossible for a client to talk to
@@ -3010,9 +3473,10 @@ has been deliberately configured to conceal its version number, or
 if the server is a version which PuTTY's bug database does not know
 about, then PuTTY will not know what bugs to expect.
 
-The Bugs panel allows you to manually configure the bugs PuTTY
-expects to see in the server. Each bug can be configured in three
-states:
+The Bugs and More Bugs panels (there are two because we have so many
+bug compatibility modes) allow you to manually configure the bugs
+PuTTY expects to see in the server. Each bug can be configured in
+three states:
 
 \b \q{Off}: PuTTY will assume the server does not have the bug.
 
@@ -3099,6 +3563,29 @@ If it believes the server to have this bug, PuTTY will stop using
 ignore messages. If this bug is enabled when talking to a correct
 server, the session will succeed, but keepalives will not work and
 the session might be less cryptographically secure than it could be.
+
+\S{config-ssh-bug-winadj} \q{Chokes on PuTTY's SSH-2 \cq{winadj} requests}
+
+\cfg{winhelp-topic}{ssh.bugs.winadj}
+
+PuTTY sometimes sends a special request to SSH servers in the middle
+of channel data, with the name \cw{winadj@putty.projects.tartarus.org}
+(see \k{sshnames-channel}). The purpose of this request is to measure
+the round-trip time to the server, which PuTTY uses to tune its flow
+control. The server does not actually have to \e{understand} the
+message; it is expected to send back a \cw{SSH_MSG_CHANNEL_FAILURE}
+message indicating that it didn't understand it. (All PuTTY needs for
+its timing calculations is \e{some} kind of response.)
+
+It has been known for some SSH servers to get confused by this message
+in one way or another \dash because it has a long name, or because
+they can't cope with unrecognised request names even to the extent of
+sending back the correct failure response, or because they handle it
+sensibly but fill up the server's log file with pointless spam, or
+whatever. PuTTY therefore supports this bug-compatibility flag: if it
+believes the server has this bug, it will never send its
+\cq{winadj@putty.projects.tartarus.org} request, and will make do
+without its timing data.
 
 \S{config-ssh-bug-hmac2} \q{Miscomputes SSH-2 HMAC keys}
 
@@ -3206,28 +3693,47 @@ send an over-sized packet.  If this bug is enabled when talking to a
 correct server, the session will work correctly, but download
 performance will be less than it could be.
 
-\S{config-ssh-bug-winadj} \q{Chokes on PuTTY's SSH-2 \cq{winadj} requests}
+\S{config-ssh-bug-chanreq} \q{Replies to requests on closed channels}
 
-\cfg{winhelp-topic}{ssh.bugs.winadj}
+\cfg{winhelp-topic}{ssh.bugs.chanreq}
 
-PuTTY sometimes sends a special request to SSH servers in the middle
-of channel data, with the name \cw{winadj@putty.projects.tartarus.org}
-(see \k{sshnames-channel}). The purpose of this request is to measure
-the round-trip time to the server, which PuTTY uses to tune its flow
-control. The server does not actually have to \e{understand} the
-message; it is expected to send back a \cw{SSH_MSG_CHANNEL_FAILURE}
-message indicating that it didn't understand it. (All PuTTY needs for
-its timing calculations is \e{some} kind of response.)
+The SSH protocol as published in RFC 4254 has an ambiguity which
+arises if one side of a connection tries to close a channel, while the
+other side simultaneously sends a request within the channel and asks
+for a reply. RFC 4254 leaves it unclear whether the closing side
+should reply to the channel request after having announced its
+intention to close the channel.
 
-It has been known for some SSH servers to get confused by this message
-in one way or another \dash because it has a long name, or because
-they can't cope with unrecognised request names even to the extent of
-sending back the correct failure response, or because they handle it
-sensibly but fill up the server's log file with pointless spam, or
-whatever. PuTTY therefore supports this bug-compatibility flag: if it
-believes the server has this bug, it will never send its
-\cq{winadj@putty.projects.tartarus.org} request, and will make do
-without its timing data.
+Discussion on the \cw{ietf-ssh} mailing list in April 2014 formed a
+clear consensus that the right answer is no. However, because of the
+ambiguity in the specification, some SSH servers have implemented the
+other policy; for example,
+\W{https://bugzilla.mindrot.org/show_bug.cgi?id=1818}{OpenSSH used to}
+until it was fixed.
+
+Because PuTTY sends channel requests with the \q{want reply} flag
+throughout channels' lifetime (see \k{config-ssh-bug-winadj}), it's
+possible that when connecting to such a server it might receive a
+reply to a request after it thinks the channel has entirely closed,
+and terminate with an error along the lines of \q{Received
+\cw{SSH2_MSG_CHANNEL_FAILURE} for nonexistent channel 256}.
+
+\S{config-ssh-bug-oldgex2} \q{Only supports pre-RFC4419 SSH-2 DH GEX}
+
+\cfg{winhelp-topic}{ssh.bugs.oldgex2}
+
+The SSH key exchange method that uses Diffie-Hellman group exchange
+was redesigned after its original release, to use a slightly more
+sophisticated setup message. Almost all SSH implementations switched
+over to the new version. (PuTTY was one of the last.) A few old
+servers still only support the old one.
+
+If this bug is detected, and the client and server negotiate
+Diffie-Hellman group exchange, then PuTTY will send the old message
+now known as \cw{SSH2_MSG_KEX_DH_GEX_REQUEST_OLD} in place of the new
+\cw{SSH2_MSG_KEX_DH_GEX_REQUEST}.
+
+This is an SSH-2-specific bug.
 
 \H{config-serial} The Serial panel
 
@@ -3360,5 +3866,5 @@ Here is an example \c{PUTTYRND.REG} file:
 
 You should replace \c{a:\\putty.rnd} with the location where you
 want to store your random number data. If the aim is to carry around
-PuTTY and its settings on one floppy, you probably want to store it
-on the floppy.
+PuTTY and its settings on one USB stick, you probably want to store it
+on the USB stick.

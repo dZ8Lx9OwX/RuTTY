@@ -3,12 +3,12 @@ all: man index.html
 # Decide on the versionid policy.
 #
 # If the user has passed in $(VERSION) on the command line (`make
-# VERSION="Release 0.56"'), we use that as an explicit version
-# string. Otherwise, we use `svnversion' to examine the checked-out
-# documentation source, and if that returns a single revision
-# number then we invent a version string reflecting just that
-# number. Failing _that_, we resort to versionids.but which shows a
-# $Id for each individual file.
+# VERSION="Release 0.56"'), we use that as an explicit version string.
+# Otherwise, we use `svnversion' to examine the checked-out
+# documentation source, and if that returns a single revision number
+# then we invent a version string reflecting just that number. Failing
+# _that_, we resort to versionids.but which gives 'version
+# unavailable'.
 #
 # So here, we define VERSION using svnversion if it isn't already
 # defined ...
@@ -28,14 +28,14 @@ endif
 ifdef VERSION
 VERSIONIDS=vstr
 vstr.but: FORCE
-	echo \\versionid $(VERSION) > vstr.but
+	printf '\\versionid $(VERSION)\n' > vstr.but
 FORCE:;
 else
 VERSIONIDS=vids
 endif
 
-CHAPTERS := $(SITE) blurb intro gs using config pscp psftp plink pubkey
-CHAPTERS += pageant errors faq feedback licence udp pgpkeys sshnames
+CHAPTERS := $(SITE) copy blurb intro gs using config pscp psftp plink
+CHAPTERS += pubkey pageant errors faq feedback licence udp pgpkeys sshnames
 CHAPTERS += index $(VERSIONIDS)
 
 INPUTS = $(patsubst %,%.but,$(CHAPTERS))
@@ -44,21 +44,22 @@ INPUTS = $(patsubst %,%.but,$(CHAPTERS))
 HALIBUT = halibut
 
 index.html: $(INPUTS)
-	$(HALIBUT) --text --html --winhelp $(INPUTS)
+	$(HALIBUT) --text --html --chm $(INPUTS)
 
 # During formal builds it's useful to be able to build this one alone.
+putty.chm: $(INPUTS)
+	$(HALIBUT) --chm $(INPUTS)
+
+# We don't ship this any more.
 putty.hlp: $(INPUTS)
 	$(HALIBUT) --winhelp $(INPUTS)
 
 putty.info: $(INPUTS)
 	$(HALIBUT) --info $(INPUTS)
 
-chm: putty.hhp
-putty.hhp: $(INPUTS) chm.but
-	$(HALIBUT) --html $(INPUTS) chm.but
-
 MKMAN = $(HALIBUT) --man=$@ mancfg.but $<
-MANPAGES = putty.1 puttygen.1 plink.1 pscp.1 psftp.1 puttytel.1 pterm.1
+MANPAGES = putty.1 puttygen.1 plink.1 pscp.1 psftp.1 puttytel.1 pterm.1 \
+           pageant.1
 man: $(MANPAGES)
 
 putty.1: man-putt.but mancfg.but; $(MKMAN)
@@ -68,6 +69,7 @@ pscp.1: man-pscp.but mancfg.but; $(MKMAN)
 psftp.1: man-psft.but mancfg.but; $(MKMAN)
 puttytel.1: man-ptel.but mancfg.but; $(MKMAN)
 pterm.1: man-pter.but mancfg.but; $(MKMAN)
+pageant.1: man-pag.but mancfg.but; $(MKMAN)
 
 mostlyclean:
 	rm -f *.html *.txt *.hlp *.cnt *.1 *.info vstr.but *.hh[pck]

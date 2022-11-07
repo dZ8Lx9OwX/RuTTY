@@ -10,7 +10,7 @@
 #include "dialog.h"
 #include "storage.h"
 
-static void about_handler(union control *ctrl, void *dlg,
+static void about_handler(union control *ctrl, dlgparam *dlg,
 			  void *data, int event)
 {
     if (event == EVENT_ACTION) {
@@ -18,7 +18,7 @@ static void about_handler(union control *ctrl, void *dlg,
     }
 }
 
-void gtk_setup_config_box(struct controlbox *b, int midsession, void *win)
+void gtk_setup_config_box(struct controlbox *b, bool midsession, void *win)
 {
     struct controlset *s, *s2;
     union control *c;
@@ -81,6 +81,7 @@ void gtk_setup_config_box(struct controlbox *b, int midsession, void *win)
             memmove(b->ctrlsets+i, b->ctrlsets+i+1,
                     (b->nctrlsets-i-1) * sizeof(*b->ctrlsets));
             b->nctrlsets--;
+            ctrl_free_set(s2);
             break;
         }
     }
@@ -127,6 +128,22 @@ void gtk_setup_config_box(struct controlbox *b, int midsession, void *win)
 		  HELPCTX(translation_utf8_override),
 		  conf_checkbox_handler,
 		  I(CONF_utf8_override));
+
+#ifdef OSX_META_KEY_CONFIG
+    /*
+     * On OS X, there are multiple reasonable opinions about whether
+     * Option or Command (or both, or neither) should act as a Meta
+     * key, or whether they should have their normal OS functions.
+     */
+    s = ctrl_getset(b, "Terminal/Keyboard", "meta",
+		    "Choose the Meta key:");
+    ctrl_checkbox(s, "Option key acts as Meta", 'p',
+		  HELPCTX(no_help),
+		  conf_checkbox_handler, I(CONF_osx_option_meta));
+    ctrl_checkbox(s, "Command key acts as Meta", 'm',
+		  HELPCTX(no_help),
+		  conf_checkbox_handler, I(CONF_osx_command_meta));
+#endif
 
     if (!midsession) {
         /*

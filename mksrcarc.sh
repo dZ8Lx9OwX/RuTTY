@@ -1,4 +1,7 @@
 #!/bin/sh
+
+set -e
+
 perl mkfiles.pl
 # These are text files.
 text=`{ find . -name CVS -prune -o \
@@ -10,15 +13,21 @@ text=`{ find . -name CVS -prune -o \
                -name '*.dsp' -prune -o \
                -name '*.dsw' -prune -o \
                -type f -print | sed 's/^\.\///'; } | \
-      grep -ivE 'testdata/.*\.txt|MODULE|putty.iss|website.url' | grep -vF .ico | grep -vF .icns`
+      grep -ivE 'test/.*\.txt|MODULE|putty.iss|website.url' | grep -vF .ico | grep -vF .icns`
 # These are files which I'm _sure_ should be treated as text, but
 # which zip might complain about, so we direct its moans to
 # /dev/null! Apparently its heuristics are doubtful of UTF-8 text
 # files.
-bintext=testdata/*.txt
+bintext=test/*.txt
 # These are actual binary files which we don't want transforming.
-bin=`{ ls -1 windows/*.ico windows/putty.iss windows/website.url macosx/*.icns; \
+bin=`{ ls -1 windows/*.ico windows/putty.iss windows/website.url; \
        find . -name '*.dsp' -print -o -name '*.dsw' -print; }`
-zip -k -l putty-src.zip $text > /dev/null
-zip -k -l putty-src.zip $bintext > /dev/null 2>&1
-zip -k putty-src.zip $bin > /dev/null
+
+verbosely() {
+    echo "$@"
+    "$@"
+}
+
+verbosely zip -l putty-src.zip $text
+verbosely zip -l putty-src.zip $bintext
+verbosely zip putty-src.zip $bin
