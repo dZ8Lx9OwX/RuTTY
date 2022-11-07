@@ -1373,11 +1373,12 @@ void setup_config_box(struct controlbox *b, int midsession,
 		 dlg_stdeditbox_handler, I(offsetof(Config,script_cond_line)),
 		 I(sizeof(((Config *)0)->script_cond_line)));
 
-    ctrl_radiobuttons(s, "CRLF or LF translation:", 't', 4, HELPCTX(no_help),
+    ctrl_radiobuttons(s, "CR/LF translation:", 't', 4, HELPCTX(no_help),
           dlg_stdradiobutton_handler,I(offsetof(Config,script_crlf)),
           "Off", I(SCRIPT_OFF),
           "no LF", I(SCRIPT_NOLF),
           "CR", I(SCRIPT_CR),
+          "Rec", I(SCRIPT_REC),
           NULL);
 
 	ctrl_editbox(s, "halt on", 'v', 80, HELPCTX(no_help),

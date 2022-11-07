@@ -124,7 +124,7 @@ BEGIN
 	    VALUE "LegalCopyright",	"Copyright \251 2013 Ernst Dijk"
         VALUE "Copyright",	"RuTTY, a modified version of PuTTY.  PuTTY is Copyright 1997-2011 Simon Tatham.  Modifications are Copyright 2013 Ernst Dijk."
 #else
-        VALUE "CompanyName",	"Simon Tatham"  /* required :/ */
+      VALUE "CompanyName",	"Simon Tatham"  /* required :/ */
 	    VALUE "ProductName",	"PuTTY suite"
 	    VALUE "FileDescription",	APPDESC
 	    VALUE "InternalName",	APPNAME

@@ -1,4 +1,4 @@
-/* script.h  version 0.12
+/* script.h  version 0.13.26c
 
  part of rutty - a modified version of putty
  Copyright 2013, Ernst Dijk
@@ -15,7 +15,7 @@ struct scriptDATA {
    int line_delay;  /* ms */
    int char_delay;  /* ms */
    char cond_char;
-   int cond_use;  /* use cond. from file */
+   int cond_use;  /* use condition from file */
    int enable;  /* wait for host response */
    int except;  /* except firstline */
    int timeout;  /* sec */
@@ -29,12 +29,16 @@ struct scriptDATA {
    int waitfor2_c;
    int runs;
    int send;
-   FILE *scriptfile;
+   //FILE *scriptfile;
+   char * filebuffer;
+   char * nextnextline;
+   char * filebuffer_end;
    long latest;
 
    FILE *scriptrecord;
 
-   char nextline[script_line_size];
+   //char nextline[script_line_size];
+   char * nextline;
    int nextline_c;
    int nextline_cc;
    char remotedata[script_line_size];
@@ -46,7 +50,7 @@ typedef struct scriptDATA ScriptData;
 
 
 /* script cr/lf translation */
-enum { SCRIPT_OFF, SCRIPT_NOLF, SCRIPT_CR};
+enum {SCRIPT_OFF, SCRIPT_NOLF, SCRIPT_CR, SCRIPT_REC};
 
 
 /* script mode */
@@ -62,7 +66,7 @@ void script_sendline(void *ctx, long now);
 void script_sendchar(void *ctx, long now);
 void script_timeout(void *ctx, long now);
 int script_chkline(ScriptData * scriptdata);
-void script_cond_set(char * cond, int *p, char *in);
+void script_cond_set(char * cond, int *p, char *in, int sz);
 int script_cond_chk(char *ref, int rc, char *data, int dc);
 void script_remote(ScriptData * scriptdata, const char * data, int len);
 void script_local(ScriptData * scriptdata, const char * data, int len);
