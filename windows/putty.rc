@@ -1,0 +1,15 @@
+#include "rcstuff.h"
+
+/* rutty: */
+#ifdef rutty
+#define APPNAME "RuTTY"
+#else
+#define APPNAME "PuTTY"
+#endif
+#define APPDESC "SSH, Telnet and Rlogin client"
+
+#include "win_res.rc2"
+
+#ifndef NO_MANIFESTS
+1 RT_MANIFEST "putty.mft"
+#endif /* NO_MANIFESTS */

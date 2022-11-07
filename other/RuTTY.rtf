@@ -1,0 +1,167 @@
+{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Arial;}}
+{\colortbl ;\red0\green0\blue0;\red0\green0\blue255;}
+{\*\generator Msftedit 5.41.15.1515;}\viewkind4\uc1\pard\lang1033\b\f0\fs20 RuTTY 0.12\b0\par
+\par
+RuTTY - a modified version of PuTTY\par
+PuTTY is copyright 1997-2011 Simon Tatham\par
+RuTTY is copyright 2013, Ernst Dijk\par
+\par
+\par
+Record and Replay PuTTY, RRPuTTY, RuTTY \par
+RuTTY adds scripting to PuTTY, scripting the easy way, record and replay.\par
+\par
+\par
+\par
+\b Introduction\par
+\b0 I Needed to send a list of commands to a host . Copy and Paste is a possibility, but sometimes the list is to long, some commands need more time to execute, I sure need more time to read if a command didn't fail. So I build in some Record and Replay options in to PuTTY, and called it RuTTY.\par
+1. option '\i send script file\i0 ' in the context menu. Also a scripting panel with some settings\par
+2. line delay, wait before sending the next command line. Also a better way, wait for the prompt to return \par
+3. character delay, some host can't handle a command line at once\par
+4. check host response for 'forbidden' words line "error" and "failed"\par
+5. Record. what you type and the host response is recorded. \par
+   at Replay it sends the command line and waits for the same host response\par
+\par
+\i example\par
+\i0 10 command lines, fastest command needs 10ms to execute, the slowest 2 seconds. prompt is " m2@m $ "\par
+- set line delay to 2000ms \par
+- or enable \i 'wait for host response', \i0 enter the prompt as '\i wait for\i0 ' condition\par
+- if one of the commands would change the prompt you could leave '\i wait for'\i0  empty and set a small line delay like 10ms\par
+- or you can enter both prompts as a \i 'wait for'\i0  condition, using qouted words: "m2@m$" "m2@m /home $"\par
+- or, to make sure cd /home was successfull enter it as a condition in your script file:\par
+   ...\par
+   cd /home\par
+\b    ::\b0 this is a comment line, the condition below makes the script wait for the changed prompt\par
+\b    :\b0 m2@m /home $\par
+   ...\par
+\par
+\i example 2\par
+\i0 conditions in file can be used for automated login also:\par
+\b   ::\b0 wait for the login qouestion\par
+\b   :\b0 login\par
+  your_username\par
+\b   :\b0 password\par
+  your_password\par
+\par
+\par
+\par
+\cf1\b Editing script files\par
+\cf0\b0 RuTTY records what you type, not what is send to the host. RuTTY records lines, when you press Enter a Cariage Return is recorded, a LineFeed is added to mark the end of the line, and the line is stored in the file. \par
+At replay the line is read, the LF removed, and the line is send to the terminal.\par
+\par
+Note: when you press Enter the terminal emulator might send CR or CR+LF to the host.\par
+Same with replay, when sending an CR to the terminal emulator it might send CR or CR+LF to the host.\par
+\par
+If you create a script file with a linux style of editor only a LF is added when you press Enter, you must put the CR in the file yourself or change the '\i CR/LF translation\i0 ' settings.  A dos/windows editor puts CR+LF in the file when you press Enter.  Lines without a CR can be usefull though, p.a. a menu choise where you only would need to press 1 and not 1 + Enter. \par
+\par
+When editing a recorded script please note that a CR is recorded as CRLF, a LF as LFLF, a CRLF as CRLFLFLF\par
+\par
+\par
+\par
+\b Explanation of the Session/Scripting panel\par
+\b0\par
+\cf2\i Script filename   \par
+Off | Replay | Record\par
+\cf0\i0 Enter a filename and select the action what to do when starting this session\par
+Replay: the file must exist\par
+Record: the file must not exist\par
+In case of an error, the error message is written in the Event Log \par
+Note: 'Record' mode is not saved. It's once, this session only.\par
+'Replay' mode is stored with saved session, so it can be used for automated to login\par
+\par
+\cf2\i line delay (ms) \i0\par
+\cf0 delay before sending a command line to the host \par
+there is a mimimun delay of 5 ms\par
+\par
+\cf2\i character delay (ms)\par
+\cf0\i0 delay before sending each character of the command line\par
+special cases:\par
+0 =  Off, send the line as one message\par
+1 =  send each character as a single message\par
+> 1  delay in milliseconds\par
+note: depending on OS there is a mimimum delay\par
+for windows it is documented as10 ms.\par
+\par
+\cf2\i start of condition/comment line\par
+\cf0\i0 a single character witch is used to mark the start of a condition/comment line\par
+if it's for example '\b :\b0 ', then the lines in the file can be:\par
+\b ::\b0 comment line\par
+\b :\b0 condition, if enabled, this line must match before the command line is send\par
+command line, this line will be send to the host\par
+see '\i use conditions from file\i0 ' below \par
+\par
+\cf2\i CR/LF translation\par
+Off | no LF | CR | LF | CRLF\cf0\i0\par
+Lines in a file are seperated with LF, or even CR/ LF in windows\par
+In a terminal session if you press 'Enter' a CR is recorded, however in most cases CR/LF is send to the host.\par
+\par
+no LF\tab remove the LF from the command line to send\par
+\tab wile recording a LF was added to seperate the lines in the file\par
+\par
+CR\tab replace CR/LF with CR\par
+\tab if you created a script file with a linux style of editor, there is only a LF at line end\par
+\tab to send the line to the host normaly a CR is needed\par
+\par
+Off\tab lines in the script file are send including the terminating LF\par
+\par
+\cf2\i\par
+halt on \par
+\cf0\i0 Script replay is stopped if this line or one of the qouted words is found in the host response \par
+for example:\par
+system has failed - if this hole line matches a host response the script is halted\par
+"error" "ERROR"   - if one of these words matches script is halted\par
+Note: only if the first character is " qouted words are compared instead of the complete line\par
+\par
+\cf2\i wait for response from host\par
+\cf0\i0 e.g. wait for a prompt\par
+\par
+\cf2\i except for first line \par
+\cf0\i0 on some systems you must send first a few CR's before a prompt is given\par
+\par
+\cf2\i timeout (s)\par
+\cf0\i0 time to wait for a response from the host in seconds\par
+\par
+\cf2\i wait for \par
+\cf0\i0 The response from host to wait for, e.g. a prompt\par
+'OK' for example when using a modem, or 'C:\\>' in DOS\par
+If left empty, any host resonse will do\par
+When the line starts with ", the qouted words are compared instead of the complete line \par
+e.g. "C:\\>" "C:\\myfolder>"\par
+\par
+\cf2\i use conditions from file\par
+\cf0\i0 If the '\i start of condition/comment line\i0 ' character would be '\b :\b0 '\par
+then when recording the response from host is marked with a '\b :\b0 ' at line start\par
+At replay RuTTY will wait for the same response before sending the next command line\par
+an example: \par
+\b :\b0 c:\\>\par
+cd \\myfolder\par
+\b :\b0 c:\\myfolder>\par
+del *.obj\par
+RuTTY will stop the script if the host response after 'cd \\myfolder' is not 'c:\\myfolder>'\par
+p.a. if the response would be 'C:\\MyFolder>' the script will be halted.\par
+Conditions can also be qouted words or part of a line, e.g. \b :\b0 "c:\\myfolder>" "C:\\MyFolder>"\par
+If there are no conditions in the script between command lines, then default '\i wait for'\i0  will be used\par
+\par
+\par
+\b known limitations\par
+\b0\i - 'halt on'\i0  and \i 'wait for'\i0  are limited in size, max 256 characters\b\par
+\b0 - replay, using host response as a condition, only the last 256 characters are used,\par
+  except if the expexted host response is qouted, then the fist 256 characters are used.\par
+\cf1 - recording, line size limits. host response 3840 characters. command line 4096 characters.\par
+\cf0 - replay, command lines longer then 4096 characters will fail if \i 'wait for host response'\i0  is enabled.\par
+- LF is used to seperate lines in a file. a LF entered by keyboard is recorded as LF LF. \par
+  However, replay can't handle this. Edit the recorded script file and change \i 'CR/LF translation\i0 ' settings.\par
+  note: it's very unlikely that you would ever need to send a LF to the terminal.\par
+  normaly when you press Enter, CR, the terminal emulation will then send CR or CR/LF to the host. \par
+- NUL is also a special character, used to mark end of string. If used in the command line it is recorded.\par
+  However, replay can't handle it.  note: it's very very unlikely that you would ever send a NUL to the terminal.\par
+\par
+\par
+\b known bugs\b0\par
+- while recording a session, settings can be changed. they have no effect, \i unless\i0  you send a script file !\par
+- when closing a session before pressing enter, the last line is not recorded (in most cases not send to the host either)\par
+- keyboard is not locked during replay, especialy past (done with the right mouse button) is dangerous\par
+\par
+\par
+2013-05-17\par
+}
+ 
